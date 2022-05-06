@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react';
-import { Game } from '../../game/game';
+import { default as Game } from '../../game';
 
 const GameContainer = () => {
-  useEffect(() => {
-    new Game();
-  }, []);
+  useEffect(() => Game(), []);
 
   return (
     <div id="game-container">
