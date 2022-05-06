@@ -1,4 +1,15 @@
-import 'babylonjs';
+import {
+  Engine,
+  Scene,
+  Color4,
+  ArcRotateCamera,
+  FreeCamera,
+  StandardMaterial,
+  DynamicTexture,
+  Mesh,
+  Vector3,
+  ParticleHelper,
+} from 'babylonjs';
 
 const showSpinner = () => {
   const indicator = document.getElementById('loadingIndicator');
@@ -8,7 +19,7 @@ const showSpinner = () => {
   indicator.innerText = indicatorInitialText;
   setInterval(() => {
     indicator.innerText += '.';
-    count++;
+    count += 1;
     if (count > 3) {
       count = 0;
       indicator.innerText = indicatorInitialText;
@@ -23,22 +34,22 @@ const hideSpinner = () => {
 const Game = () => {
   const canvas = document.getElementById('game');
 
-  const engine = new BABYLON.Engine(canvas);
-  const scene = new BABYLON.Scene(engine);
-  scene.clearColor = new BABYLON.Color4(0.196, 0.196, 0.196, 0.0);
+  const engine = new Engine(canvas);
+  const scene = new Scene(engine);
+  scene.clearColor = new Color4(0.196, 0.196, 0.196, 0.0);
   scene.blockMaterialDirtyMechanism = true;
 
   showSpinner();
 
   window.onresize = () => engine.resize();
 
-  const mainCamera = new BABYLON.ArcRotateCamera(
+  const mainCamera = new ArcRotateCamera(
     'mainCamera',
     0,
     1.25,
     9,
-    new BABYLON.Vector3(0, 0, 0),
-    scene
+    new Vector3(0, 0, 0),
+    scene,
   );
   mainCamera.lowerRadiusLimit = 9;
   mainCamera.upperRadiusLimit = 9;
@@ -48,17 +59,17 @@ const Game = () => {
     scene.activeCameras.push(scene.activeCamera);
   }
 
-  const overlayCamera = new BABYLON.FreeCamera(
+  const overlayCamera = new FreeCamera(
     'overlayCamera',
-    new BABYLON.Vector3(15, 10.5, -22),
-    scene
+    new Vector3(15, 10.5, -22),
+    scene,
   );
   overlayCamera.layerMask = 0x20000000;
   scene.activeCameras.push(overlayCamera);
 
-  const cubeMaterial = new BABYLON.StandardMaterial('cubeMaterial', scene);
-  const cubeTexture = new BABYLON.DynamicTexture('cubeTexture', 1024, scene);   
-	const context = cubeTexture.getContext();
+  const cubeMaterial = new StandardMaterial('cubeMaterial', scene);
+  const cubeTexture = new DynamicTexture('cubeTexture', 1024, scene);
+  const context = cubeTexture.getContext();
   cubeMaterial.diffuseTexture = cubeTexture;
   cubeMaterial.specularTexture = cubeTexture;
   cubeMaterial.emissiveTexture = cubeTexture;
@@ -68,23 +79,25 @@ const Game = () => {
   const image = new Image();
   image.src = 'images/wax-texture.png';
   image.onload = () => {
-      context.drawImage(image, 0, 0);
-      cubeTexture.update();	
+    context.drawImage(image, 0, 0);
+    cubeTexture.update();
   };
 
-  const box = new BABYLON.Mesh.CreateBox('box', 2, scene);
+  const box = new Mesh.CreateBox('box', 2, scene);
   box.rotation.x = -0.2;
   box.rotation.y = -0.4;
   box.material = cubeMaterial;
   box.doNotSyncBoundingInfo = true;
   box.convertToUnIndexedMesh();
 
-  for (let i = 0; i < 20; i++) {
-    BABYLON.ParticleHelper.CreateAsync('fire', scene).then((set) => {
+  for (let i = 0; i < 20; i += 1) {
+    ParticleHelper.CreateAsync('fire', scene).then((set) => {
       set.start();
-      set.systems.forEach(system => {
-        system.worldOffset = new BABYLON.Vector3(i * 2 - 3, 0, 0);
+      set.systems.forEach((system) => {
+        /* eslint-disable no-param-reassign */
+        system.worldOffset = new Vector3(i * 2 - 3, 0, 0);
         system.layerMask = 0x20000000;
+        /* eslint-enable no-param-reassign */
       });
     });
   }

@@ -1,6 +1,6 @@
-import styled, { createGlobalStyle } from 'styled-components';
+import { createGlobalStyle } from 'styled-components';
+import dynamic from 'next/dynamic';
 import BaseLayout from '../layouts/BaseLayout';
-import dynamic from 'next/dynamic'
 
 const GlobalStyle = createGlobalStyle`
   html {
@@ -73,11 +73,10 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const GameContainerNoSSR = dynamic(
-  () =>
-    import('../components/game/GameContainer'),
-    {
-      ssr: false
-    }
+  () => import('../components/game/GameContainer'),
+  {
+    ssr: false,
+  },
 );
 
 const Home = () => (
