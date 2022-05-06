@@ -30,15 +30,6 @@ const Game = () => {
 
   showSpinner();
 
-  scene.executeWhenReady(() => {
-    engine.runRenderLoop(() => {
-      box.rotation.x += 0.01;
-      box.rotation.y += 0.01;
-      scene.render();
-    });
-    setTimeout(() => hideSpinner(), 400);
-  });
-
   window.onresize = () => engine.resize();
 
   const mainCamera = new BABYLON.ArcRotateCamera(
@@ -66,12 +57,20 @@ const Game = () => {
   scene.activeCameras.push(overlayCamera);
 
   const cubeMaterial = new BABYLON.StandardMaterial('cubeMaterial', scene);
-  const cubeTexture = new BABYLON.Texture('images/wax-texture.png', scene);
+  const cubeTexture = new BABYLON.DynamicTexture('cubeTexture', 1024, scene);   
+	const context = cubeTexture.getContext();
   cubeMaterial.diffuseTexture = cubeTexture;
   cubeMaterial.specularTexture = cubeTexture;
   cubeMaterial.emissiveTexture = cubeTexture;
   cubeMaterial.ambientTexture = cubeTexture;
   cubeMaterial.freeze();
+
+  const image = new Image();
+  image.src = 'images/wax-texture.png';
+  image.onload = () => {
+      context.drawImage(image, 0, 0);
+      cubeTexture.update();	
+  };
 
   const box = new BABYLON.Mesh.CreateBox('box', 2, scene);
   box.rotation.x = -0.2;
@@ -89,6 +88,27 @@ const Game = () => {
       });
     });
   }
+
+  scene.executeWhenReady(() => {
+    let hue = 0;
+    engine.runRenderLoop(() => {
+      box.rotation.x += 0.01;
+      box.rotation.y += 0.01;
+
+      hue += 0.1;
+      if (hue > 360) hue = 0;
+      context.clearRect(0, 0, 1024, 1024);
+      context.drawImage(image, 0, 0);
+      context.globalCompositeOperation = 'multiply';
+      context.fillStyle = `hsl(${hue}, 100%, 50%)`;
+      context.fillRect(0, 0, 1024, 1024);
+      context.globalCompositeOperation = 'source-over';
+      cubeTexture.update();
+
+      scene.render();
+    });
+    setTimeout(() => hideSpinner(), 400);
+  });
 };
 
 export default Game;
