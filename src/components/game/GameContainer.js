@@ -1,22 +1,28 @@
 import React, { useEffect } from 'react';
-import { default as Game } from '../../game';
+import Game from '../../game';
 
 const GameContainer = () => {
   useEffect(() => Game(), []);
 
   return (
     <div id="game-container">
-      <canvas id="game"
-              style={{
-                backgroundImage: 'url(/images/statik.gif)',
-                backgroundRepeat: 'repeat',
-                backgroundSize: 'auto 50vh',
-                backgroundPosition: 'center'
-              }}
+      <canvas
+        id="game"
+        style={{
+          backgroundImage: 'url(/images/statik.gif)',
+          backgroundRepeat: 'repeat',
+          backgroundSize: 'auto 50vh',
+          backgroundPosition: 'center',
+        }}
       />
-      <a id="enterSite" href="https://waxattic.com">shop &#62;</a>
+      <a
+        id="enterSite"
+        href="https://waxattic.com"
+      >
+        shop &#62;
+      </a>
       <div id="loadingOverlay">
-        <span id="loadingIndicator"/>
+        <span id="loadingIndicator" />
       </div>
     </div>
   );
