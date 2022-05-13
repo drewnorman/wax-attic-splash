@@ -68,7 +68,8 @@ const Game = () => {
   scene.activeCameras.push(overlayCamera);
 
   const cubeMaterial = new StandardMaterial('cubeMaterial', scene);
-  const cubeTexture = new DynamicTexture('cubeTexture', 1024, scene);
+  const cubeTextureSize = 1500;
+  const cubeTexture = new DynamicTexture('cubeTexture', cubeTextureSize, scene);
   const context = cubeTexture.getContext();
   cubeMaterial.diffuseTexture = cubeTexture;
   cubeMaterial.specularTexture = cubeTexture;
@@ -110,11 +111,11 @@ const Game = () => {
 
       hue += 0.1;
       if (hue > 360) hue = 0;
-      context.clearRect(0, 0, 1024, 1024);
+      context.clearRect(0, 0, cubeTextureSize, cubeTextureSize);
       context.drawImage(image, 0, 0);
       context.globalCompositeOperation = 'multiply';
       context.fillStyle = `hsl(${hue}, 100%, 50%)`;
-      context.fillRect(0, 0, 1024, 1024);
+      context.fillRect(0, 0, cubeTextureSize, cubeTextureSize);
       context.globalCompositeOperation = 'source-over';
       cubeTexture.update();
 
