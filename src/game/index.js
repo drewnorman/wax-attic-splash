@@ -109,7 +109,7 @@ const Game = () => {
       box.rotation.x += 0.01;
       box.rotation.y += 0.01;
 
-      hue += 0.1;
+      hue += 0.7;
       if (hue > 360) hue = 0;
       context.clearRect(0, 0, cubeTextureSize, cubeTextureSize);
       context.drawImage(image, 0, 0);
