@@ -9,6 +9,18 @@
 /.next/
 /out/
 
+# Astro
+/dist/
+/.astro/
+
+# Firebase
+/.firebase/
+
+# Terraform/OpenTofu
+**/.terraform/
+*.tfstate
+*.tfstate.*
+
 # Production
 /build
 

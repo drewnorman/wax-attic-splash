@@ -15,6 +15,8 @@ const showSpinner = () => {
   const indicator = document.getElementById('loadingIndicator');
   const indicatorInitialText = 'evolving';
 
+  if (!indicator) return;
+
   let count = 0;
   indicator.innerText = indicatorInitialText;
   setInterval(() => {
@@ -28,11 +30,17 @@ const showSpinner = () => {
 };
 
 const hideSpinner = () => {
-  document.getElementById('loadingOverlay').style = 'display: none;';
+  const loadingOverlay = document.getElementById('loadingOverlay');
+
+  if (loadingOverlay) {
+    loadingOverlay.style = 'display: none;';
+  }
 };
 
 const Game = () => {
   const canvas = document.getElementById('game');
+
+  if (!canvas) return;
 
   const engine = new Engine(canvas);
   const scene = new Scene(engine);
@@ -78,7 +86,7 @@ const Game = () => {
   cubeMaterial.freeze();
 
   const image = new Image();
-  image.src = 'images/wax-texture.png';
+  image.src = '/images/wax-texture.png';
   image.onload = () => {
     context.drawImage(image, 0, 0);
     cubeTexture.update();
