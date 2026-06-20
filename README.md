@@ -17,11 +17,34 @@ yarn dev
 
 The Nix flake provides Node, Yarn, Firebase CLI, Google Cloud CLI, and OpenTofu.
 
+For Podman-based development:
+
+```sh
+podman compose -f compose.yml up
+```
+
+The Compose service uses `node:22-bookworm-slim`, runs the Astro binary from the
+bind-mounted workspace, joins the external `traefik` Podman network, and exposes
+Astro through the global Traefik service at
+`http://site.wax-attic-splash.localhost:8080/`. Run `yarn install` on the host
+before starting the container so `node_modules/.bin/astro` exists.
+
+The global Traefik provider applies the local default host rule,
+`service.project.localhost`. When this command runs from the repository root,
+the Compose project is `wax-attic-splash` and the service is `site`, so the
+default host is `site.wax-attic-splash.localhost`. The service only needs labels
+for enabling Traefik and pointing the load balancer at Astro's port `4321`.
+
+The container sets `LOCAL_DEV_HTTP=1` and
+`PUBLIC_SITE_URL=http://site.wax-attic-splash.localhost:8080` so Astro and Vite
+stay on plain HTTP locally.
+
 ## Scripts
 
 - `yarn dev` starts Astro locally.
 - `yarn build` runs `astro check` and writes the static site to `dist/`.
 - `yarn preview` serves the built site locally.
+- `yarn podman:dev` starts the Podman Compose local dev service.
 - `yarn firebase:preview` deploys a temporary Firebase Hosting channel.
 - `yarn firebase:deploy` deploys Firebase Hosting.
 

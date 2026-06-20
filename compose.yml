@@ -1,0 +1,28 @@
+version: "3"
+
+networks:
+  local:
+  traefik:
+    external: true
+
+services:
+  site:
+    image: node:22-bookworm-slim
+    restart: unless-stopped
+    working_dir: /workspace
+    environment:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      LOCAL_DEV_HTTP: "1"
+      PUBLIC_SITE_URL: "http://site.wax-attic-splash.localhost:8080"
+    command: >
+      sh -lc "node_modules/.bin/astro dev --host 0.0.0.0 --port 4321"
+    expose:
+      - "4321"
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.wax-attic-splash-site.loadbalancer.server.port=4321
+    networks:
+      - local
+      - traefik
+    volumes:
+      - .:/workspace:Z

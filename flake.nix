@@ -29,6 +29,8 @@
               pkgs.firebase-tools
               pkgs.google-cloud-sdk
               pkgs.opentofu
+              pkgs.podman
+              pkgs.podman-compose
               pkgs.nixpkgs-fmt
               pkgs.just
             ];
