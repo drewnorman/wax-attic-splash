@@ -1,0 +1,6 @@
+project_id         = "wax-attic"
+region             = "us-central1"
+billing_account_id = "XXXXXX-XXXXXX-XXXXXX" # gcloud billing accounts list
+monthly_budget_usd = 10
+github_owner       = "YOUR_GITHUB_USERNAME"
+github_repo        = "wax-attic-splash"
