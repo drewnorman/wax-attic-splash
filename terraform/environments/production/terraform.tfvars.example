@@ -2,5 +2,3 @@ project_id               = "wax-attic"
 region                   = "us-central1"
 firebase_hosting_site_id = "wax-attic"
 production_domain        = "waxattic.com"
-cloudflare_zone_id       = "YOUR_CLOUDFLARE_ZONE_ID"
-# cloudflare_api_token is set via TF_VAR_cloudflare_api_token env var

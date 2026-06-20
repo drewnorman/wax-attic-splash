@@ -13,18 +13,3 @@ variable "firebase_hosting_site_id" {
   default     = "wax-attic-staging"
   description = "Firebase Hosting site ID for staging."
 }
-
-variable "staging_dns_name" {
-  type        = string
-  default     = "staging"
-  description = "Cloudflare DNS record name for staging."
-}
-
-variable "cloudflare_api_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "cloudflare_zone_id" {
-  type = string
-}

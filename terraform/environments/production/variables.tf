@@ -18,12 +18,3 @@ variable "production_domain" {
   type    = string
   default = "waxattic.com"
 }
-
-variable "cloudflare_api_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "cloudflare_zone_id" {
-  type = string
-}

@@ -78,10 +78,16 @@ Configure these GitHub Actions secrets:
 OpenTofu/Terraform configuration lives under `terraform/`:
 
 - `terraform/shared` enables Firebase APIs, configures budget guardrails, and creates the GitHub Actions Workload Identity Federation deploy identity.
-- `terraform/environments/staging` creates the staging Firebase Hosting site and a Cloudflare CNAME placeholder.
-- `terraform/environments/production` creates the production Firebase Hosting site and Cloudflare records for `waxattic.com`.
+- `terraform/environments/staging` creates the staging Firebase Hosting site and outputs the optional CNAME target for external DNS.
+- `terraform/environments/production` creates the production Firebase Hosting site and outputs manual DNS records for `waxattic.com`.
 
 Copy the relevant `terraform.tfvars.example` files before applying.
+
+This repository does not manage `waxattic.com` DNS because that zone is owned
+outside this project. Coordinate the `manual_dns_*` outputs with the DNS owner
+if the Firebase site should be attached to the custom domain. The Firebase
+custom-domain attachment is also manual until DNS control is available to this
+stack or moved into a DNS-owning infrastructure repo.
 
 The shared stack also declares an empty authoritative `roles/editor` binding to
 remove legacy default-service-account Editor grants. Apply only after reviewing
