@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "wax-attic"
+  },
+  "targets": {
+    "wax-attic": {
+      "hosting": {
+        "production": [
+          "wax-attic"
+        ],
+        "staging": [
+          "wax-attic-staging"
+        ]
+      }
+    }
   }
 }

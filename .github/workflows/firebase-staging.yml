@@ -31,8 +31,8 @@ jobs:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SA_EMAIL }}
 
-      - name: Deploy staging hosting channel
+      - name: Deploy staging hosting
         run: |
-          yarn firebase hosting:channel:deploy staging \
-            --project "${PROJECT_ID}" \
-            --expires 30d
+          yarn firebase deploy \
+            --only hosting:staging \
+            --project "${PROJECT_ID}"

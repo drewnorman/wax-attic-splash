@@ -1,4 +1,4 @@
-const url = import.meta.env.PUBLIC_SITE_URL ?? 'https://waxattic.com';
+const url = import.meta.env.PUBLIC_SITE_URL ?? 'https://shop.waxattic.com';
 
 export default {
   name: 'Wax Attic',

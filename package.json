@@ -10,8 +10,8 @@
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "test": "yarn build",
     "podman:dev": "podman compose -f compose.yml up",
-    "firebase:preview": "firebase hosting:channel:deploy preview --expires 7d",
-    "firebase:deploy": "firebase deploy --only hosting"
+    "firebase:preview": "firebase hosting:channel:deploy preview --only staging --expires 7d",
+    "firebase:deploy": "firebase deploy --only hosting:production"
   },
   "dependencies": {
     "astro": "^5.8.1",

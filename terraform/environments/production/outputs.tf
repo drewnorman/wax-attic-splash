@@ -6,8 +6,8 @@ output "firebase_hosting_default_url" {
   value = "https://${google_firebase_hosting_site.production.site_id}.web.app"
 }
 
-output "manual_dns_apex_a_record" {
-  description = "A record target for the external DNS owner if the production domain is delegated to Firebase Hosting."
+output "manual_dns_subdomain_a_record" {
+  description = "Expected A record target for the external DNS owner. Use the exact record requested by Firebase Hosting during custom-domain setup."
   value = {
     name  = var.production_domain
     type  = "A"

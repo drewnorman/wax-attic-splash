@@ -33,4 +33,4 @@ jobs:
           service_account: ${{ secrets.GCP_SA_EMAIL }}
 
       - name: Deploy production hosting
-        run: yarn firebase deploy --only hosting --project "${PROJECT_ID}"
+        run: yarn firebase deploy --only hosting:production --project "${PROJECT_ID}"
