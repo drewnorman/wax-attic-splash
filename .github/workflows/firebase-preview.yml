@@ -37,5 +37,6 @@ jobs:
       - name: Deploy preview channel
         run: |
           yarn firebase hosting:channel:deploy pr-${{ github.event.pull_request.number }} \
+            --only staging \
             --project "${PROJECT_ID}" \
             --expires 7d

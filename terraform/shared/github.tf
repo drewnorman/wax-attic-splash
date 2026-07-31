@@ -3,7 +3,7 @@ resource "github_repository" "wax_attic_splash" {
   description = "Astro splash page for Wax Attic, deployed with Firebase Hosting."
   visibility  = "public"
 
-  homepage_url = "https://waxattic.com"
+  homepage_url = "https://shop.waxattic.com"
 
   has_discussions = false
   has_issues      = true

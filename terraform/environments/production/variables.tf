@@ -16,5 +16,5 @@ variable "firebase_hosting_site_id" {
 
 variable "production_domain" {
   type    = string
-  default = "waxattic.com"
+  default = "shop.waxattic.com"
 }

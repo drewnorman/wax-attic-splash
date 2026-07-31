@@ -45,8 +45,8 @@ stay on plain HTTP locally.
 - `yarn build` runs `astro check` and writes the static site to `dist/`.
 - `yarn preview` serves the built site locally.
 - `yarn podman:dev` starts the Podman Compose local dev service.
-- `yarn firebase:preview` deploys a temporary Firebase Hosting channel.
-- `yarn firebase:deploy` deploys Firebase Hosting.
+- `yarn firebase:preview` deploys a temporary channel on the staging Hosting site.
+- `yarn firebase:deploy` deploys the production Hosting site.
 
 ## Firebase Hosting
 
@@ -62,8 +62,8 @@ GitHub Actions handles test and deploy automation:
   requests opened from this repository.
 - `Release Please` opens and maintains release PRs from conventional commits on
   `master`.
-- `Firebase Staging` deploys the `staging` channel when an `-rc` release tag is
-  pushed, such as `v0.1.1-rc1`.
+- `Firebase Staging` deploys the staging site's live channel when an `-rc`
+  release tag is pushed, such as `v0.1.1-rc1`.
 - `Firebase Production` deploys live Firebase Hosting when a non-`-rc` release
   tag is pushed, such as `v0.1.1`.
 
@@ -79,15 +79,17 @@ OpenTofu/Terraform configuration lives under `terraform/`:
 
 - `terraform/shared` enables Firebase APIs, configures budget guardrails, and creates the GitHub Actions Workload Identity Federation deploy identity.
 - `terraform/environments/staging` creates the staging Firebase Hosting site and outputs the optional CNAME target for external DNS.
-- `terraform/environments/production` creates the production Firebase Hosting site and outputs manual DNS records for `waxattic.com`.
+- `terraform/environments/production` creates the production Firebase Hosting site and outputs manual DNS records for `shop.waxattic.com`.
 
 Copy the relevant `terraform.tfvars.example` files before applying.
 
 This repository does not manage `waxattic.com` DNS because that zone is owned
 outside this project. Coordinate the `manual_dns_*` outputs with the DNS owner
-if the Firebase site should be attached to the custom domain. The Firebase
-custom-domain attachment is also manual until DNS control is available to this
-stack or moved into a DNS-owning infrastructure repo.
+when attaching `shop.waxattic.com` to Firebase Hosting. Attach
+`www.shop.waxattic.com` as a permanent redirect to the canonical `shop`
+hostname. Both custom-domain attachments remain manual until DNS control is
+available to this stack or moved into a DNS-owning infrastructure repo. Do not
+change the `waxattic.com` or `www.waxattic.com` Shopify records.
 
 The shared stack also declares an empty authoritative `roles/editor` binding to
 remove legacy default-service-account Editor grants. Apply only after reviewing
