@@ -6,12 +6,12 @@ output "firebase_hosting_default_url" {
   value = "https://${google_firebase_hosting_site.production.site_id}.web.app"
 }
 
-output "manual_dns_subdomain_a_record" {
-  description = "Expected A record target for the external DNS owner. Use the exact record requested by Firebase Hosting during custom-domain setup."
+output "manual_dns_subdomain_cname_record" {
+  description = "Expected CNAME target for the external DNS owner. Use the exact record requested by Firebase Hosting during custom-domain setup."
   value = {
     name  = var.production_domain
-    type  = "A"
-    value = local.firebase_hosting_reserved_ip
+    type  = "CNAME"
+    value = "${google_firebase_hosting_site.production.site_id}.web.app"
   }
 }
 
