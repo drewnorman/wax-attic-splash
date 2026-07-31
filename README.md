@@ -20,23 +20,22 @@ The Nix flake provides Node, Yarn, Firebase CLI, Google Cloud CLI, and OpenTofu.
 For Podman-based development:
 
 ```sh
-podman compose -f compose.yml up
+just local-up
 ```
 
-The Compose service uses `node:22-bookworm-slim`, runs the Astro binary from the
-bind-mounted workspace, joins the external `traefik` Podman network, and exposes
-Astro through the global Traefik service at
-`http://site.wax-attic-splash.localhost:8080/`. Run `yarn install` on the host
-before starting the container so `node_modules/.bin/astro` exists.
+The Compose service uses `docker.io/library/node:22-bookworm-slim`, runs the
+Astro binary from the bind-mounted workspace, joins the external `local-proxy`
+Podman network, and exposes Astro through the shared Traefik service at
+`http://site.wax-attic-splash.localhost/`. The shared proxy must already be
+running and listening on local port 80. Run `yarn install` on the host before
+starting the container so `node_modules/.bin/astro` exists.
 
-The global Traefik provider applies the local default host rule,
-`service.project.localhost`. When this command runs from the repository root,
-the Compose project is `wax-attic-splash` and the service is `site`, so the
-default host is `site.wax-attic-splash.localhost`. The service only needs labels
-for enabling Traefik and pointing the load balancer at Astro's port `4321`.
+The Compose labels explicitly route `site.wax-attic-splash.localhost` through
+Traefik's `web` entrypoint to Astro on port `4321`. Use `just local-logs` to
+follow the service output and `just local-down` to stop and remove the stack.
 
 The container sets `LOCAL_DEV_HTTP=1` and
-`PUBLIC_SITE_URL=http://site.wax-attic-splash.localhost:8080` so Astro and Vite
+`PUBLIC_SITE_URL=http://site.wax-attic-splash.localhost` so Astro and Vite
 stay on plain HTTP locally.
 
 ## Scripts

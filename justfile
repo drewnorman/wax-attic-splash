@@ -12,13 +12,13 @@ check:
   just tofu-fmt-check
   just nix-check
 
-dev-up:
+local-up:
   podman compose -f compose.yml up
 
-dev-down:
+local-down:
   podman compose -f compose.yml down
 
-dev-logs:
+local-logs:
   podman compose -f compose.yml logs -f
 
 commitlint range="HEAD~1..HEAD":

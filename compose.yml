@@ -2,27 +2,30 @@ version: "3"
 
 networks:
   local:
-  traefik:
+  local-proxy:
     external: true
 
 services:
   site:
-    image: node:22-bookworm-slim
+    image: docker.io/library/node:22-bookworm-slim
     restart: unless-stopped
     working_dir: /workspace
     environment:
       ASTRO_TELEMETRY_DISABLED: "1"
       LOCAL_DEV_HTTP: "1"
-      PUBLIC_SITE_URL: "http://site.wax-attic-splash.localhost:8080"
+      PUBLIC_SITE_URL: "http://site.wax-attic-splash.localhost"
     command: >
       sh -lc "node_modules/.bin/astro dev --host 0.0.0.0 --port 4321"
     expose:
       - "4321"
     labels:
       - traefik.enable=true
+      - traefik.docker.network=local-proxy
+      - traefik.http.routers.wax-attic-splash-site.entrypoints=web
+      - traefik.http.routers.wax-attic-splash-site.rule=Host(`site.wax-attic-splash.localhost`)
       - traefik.http.services.wax-attic-splash-site.loadbalancer.server.port=4321
     networks:
       - local
-      - traefik
+      - local-proxy
     volumes:
       - .:/workspace:Z
