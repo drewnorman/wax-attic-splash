@@ -47,6 +47,27 @@ stay on plain HTTP locally.
 - `yarn firebase:preview` deploys a temporary channel on the staging Hosting site.
 - `yarn firebase:deploy` deploys the production Hosting site.
 
+## Commit messages
+
+Commit messages and pull request titles must follow the Conventional Commits
+format:
+
+```text
+<type>(optional-scope): description
+```
+
+Common types include `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+`build`, `ci`, `chore`, and `revert`. For example:
+
+```text
+feat: add shop navigation
+fix(infra): correct Firebase CNAME output
+```
+
+`yarn install` configures a Git `commit-msg` hook that checks messages locally.
+GitHub Actions also checks every pull request commit and title, and the
+`commitlint` check is required before merging to `master`.
+
 ## Firebase Hosting
 
 `firebase.json` points Hosting at `dist/`, enables clean URLs, and sets cache

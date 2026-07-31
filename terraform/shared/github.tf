@@ -32,6 +32,7 @@ resource "github_branch_protection" "master" {
   required_status_checks {
     strict = true
     contexts = [
+      "commitlint",
       "test",
     ]
   }
