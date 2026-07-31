@@ -29,11 +29,16 @@ const showSpinner = () => {
   }, 200);
 };
 
-const hideSpinner = () => {
+const finishLoading = () => {
   const loadingOverlay = document.getElementById('loadingOverlay');
+  const enterSite = document.getElementById('enterSite');
 
   if (loadingOverlay) {
-    loadingOverlay.style = 'display: none;';
+    loadingOverlay.hidden = true;
+  }
+
+  if (enterSite) {
+    enterSite.hidden = false;
   }
 };
 
@@ -129,7 +134,7 @@ const Game = () => {
 
       scene.render();
     });
-    setTimeout(() => hideSpinner(), 400);
+    setTimeout(() => finishLoading(), 400);
   });
 };
 
