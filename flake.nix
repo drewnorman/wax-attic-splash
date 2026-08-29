@@ -24,7 +24,7 @@
         {
           default = pkgs.mkShell {
             packages = [
-              pkgs.nodejs_22
+              pkgs.nodejs_24
               pkgs.yarn
               pkgs.firebase-tools
               pkgs.google-cloud-sdk

@@ -23,7 +23,7 @@ For Podman-based development:
 just local-up
 ```
 
-The Compose service uses `docker.io/library/node:22-bookworm-slim`, runs the
+The Compose service uses `docker.io/library/node:24-bookworm-slim`, runs the
 Astro binary from the bind-mounted workspace, joins the external `local-proxy`
 Podman network, and exposes Astro through the shared Traefik service at
 `http://site.wax-attic-splash.localhost/`. The shared proxy must already be
