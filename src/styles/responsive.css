@@ -1,0 +1,99 @@
+@media screen and (width <= 720px) {
+  .bio-smear {
+    width: 62vw;
+    opacity: 0.36;
+  }
+
+  .wax-wall {
+    width: 70vw;
+    font-size: 17vw;
+  }
+
+  .skull-strip {
+    left: -25%;
+    width: 150%;
+    opacity: 0.42;
+  }
+
+  .attic-portal {
+    width: 104vw;
+    opacity: 0.72;
+  }
+
+  .attic-mark {
+    top: 10%;
+  }
+
+  .edge-tape {
+    opacity: 0.16;
+  }
+
+  .chapter {
+    padding-right: 3.8rem;
+    padding-bottom: max(1.4rem, env(safe-area-inset-bottom));
+  }
+
+  .chapter h1,
+  .chapter h2 {
+    font-size: clamp(2.5rem, 15vw, 4.8rem);
+  }
+
+  .chapter--final {
+    align-content: end;
+    justify-items: start;
+  }
+
+  .chapter__final-copy {
+    width: 100%;
+  }
+
+  .shop-link {
+    margin-top: 1.4rem;
+  }
+
+  .boot-panel__checks {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop__sludge::before,
+  .backdrop__sludge::after,
+  .scroll-cue span,
+  .bio-smear,
+  .signal-tunnel,
+  .signal-tear,
+  .warning-ring,
+  .attic-portal,
+  .motif-scene::after,
+  .analog-overlay__roll,
+  .analog-overlay__rgb,
+  .burn-cursor {
+    animation-duration: 30s;
+  }
+
+  .analog-overlay__roll,
+  .analog-overlay__rgb,
+  .analog-overlay__scanlines,
+  .analog-overlay__noise,
+  .analog-overlay__tear,
+  .motif-scene::after,
+  .signal-tunnel,
+  .signal-tear,
+  .warning-ring,
+  .attic-portal,
+  .edge-tape__track,
+  .boot-panel__cursor {
+    animation: none;
+  }
+
+  #loadingOverlay.is-ready .boot-panel {
+    animation: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .burn-cursor {
+    display: none;
+  }
+}

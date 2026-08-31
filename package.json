@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "astro": "^5.8.1",
-    "babylonjs": "4.0.3"
+    "gsap": "3.15.0",
+    "three": "0.185.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",

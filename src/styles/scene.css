@@ -1,0 +1,249 @@
+#experience {
+  position: fixed;
+  inset: 0;
+  isolation: isolate;
+  overflow: hidden;
+  background: #030504;
+  touch-action: none;
+}
+
+@media (pointer: fine) {
+  #experience,
+  #experience.is-inspecting,
+  #experience a,
+  #experience button {
+    cursor: none;
+  }
+}
+
+#burnCanvas,
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+#burnCanvas {
+  z-index: 1;
+  mix-blend-mode: normal;
+}
+
+#scene {
+  z-index: 2;
+}
+
+#smokeCanvas {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.foreground-motifs {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.analog-overlay {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  overflow: hidden;
+  opacity: var(--analog-opacity);
+  pointer-events: none;
+  transition: opacity 700ms ease;
+}
+
+#overlayParticles,
+.analog-overlay__scanlines,
+.analog-overlay__roll,
+.analog-overlay__rgb,
+.analog-overlay__noise,
+.analog-overlay__tear,
+.analog-overlay__vignette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#overlayParticles {
+  transform: translate3d(var(--parallax-near-x), var(--parallax-near-y), 0);
+}
+
+.analog-overlay__scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(190 255 196 / 4%) 0,
+    rgb(190 255 196 / 4%) 1px,
+    rgb(0 0 0 / 24%) 2px,
+    rgb(0 0 0 / 10%) 4px
+  );
+  mix-blend-mode: overlay;
+  transform: translate3d(var(--parallax-mid-x), var(--parallax-mid-y), 0)
+    scale(1.04);
+  animation: scan-crawl 0.36s steps(4, end) infinite;
+}
+
+.analog-overlay__roll {
+  height: 28%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(194 255 205 / 9%) 45%,
+    rgb(0 0 0 / 14%) 52%,
+    transparent
+  );
+  filter: blur(0.22rem);
+  mix-blend-mode: screen;
+  animation: field-roll 7.2s linear infinite;
+}
+
+.analog-overlay__rgb {
+  background: repeating-linear-gradient(
+    90deg,
+    rgb(255 31 138 / 2.5%) 0 1px,
+    transparent 1px 3px,
+    rgb(42 255 104 / 2.5%) 3px 4px,
+    transparent 4px 6px
+  );
+  mix-blend-mode: screen;
+  animation: chroma-slip 4.6s steps(1, end) infinite;
+}
+
+.analog-overlay__vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 48%,
+    rgb(0 0 0 / 34%) 83%,
+    rgb(0 0 0 / 72%)
+  );
+  box-shadow: inset 0 0 2.8rem rgb(0 0 0 / 46%);
+}
+
+.analog-overlay__noise {
+  background-image: url('/images/statik.gif');
+  background-size: 28rem;
+  filter: contrast(1.8) saturate(0.25);
+  mix-blend-mode: screen;
+  opacity: calc(0.11 + var(--analog-damage) * 0.24);
+  transform: translate3d(var(--parallax-near-x), var(--parallax-near-y), 0)
+    scale(1.08);
+  animation: analog-flicker 2.8s steps(2, end) infinite;
+}
+
+.analog-overlay__tear {
+  height: clamp(0.35rem, 1.5vh, 1.25rem);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(21 255 98 / 55%),
+    rgb(255 42 161 / 42%),
+    transparent
+  );
+  box-shadow: 0 0 1rem rgb(21 255 98 / 28%);
+  opacity: calc(0.12 + var(--analog-damage) * 0.7);
+  mix-blend-mode: screen;
+  animation: tracking-tear 5.6s steps(1, end) infinite;
+}
+
+.analog-overlay__tear--a {
+  top: 17%;
+}
+
+.analog-overlay__tear--b {
+  top: 72%;
+  animation-delay: -3.4s;
+  animation-duration: 7.1s;
+}
+
+#experience[data-chapter='0'] {
+  --analog-opacity: 0.22;
+  --analog-damage: 0.14;
+}
+
+#experience[data-chapter='1'] {
+  --analog-opacity: 0.38;
+  --analog-damage: 0.35;
+}
+
+#experience[data-chapter='2'] {
+  --analog-opacity: 0.76;
+  --analog-damage: 1;
+}
+
+#experience[data-chapter='3'] {
+  --analog-opacity: 0.2;
+  --analog-damage: 0.16;
+}
+
+.edge-tape {
+  position: absolute;
+  width: 29rem;
+  overflow: hidden;
+  padding: 0.35rem 0;
+  color: #030504;
+  background: #0fed19;
+  font-size: clamp(0.62rem, 1.1vw, 0.9rem);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  opacity: 0.22;
+  transition:
+    opacity 700ms ease,
+    background-color 700ms ease,
+    transform 900ms ease;
+}
+
+.edge-tape__track {
+  display: flex;
+  width: max-content;
+  animation: tape-ticker 9s linear infinite;
+}
+
+.edge-tape__track span {
+  display: block;
+}
+
+.edge-tape--right .edge-tape__track {
+  animation-direction: reverse;
+  animation-duration: 11s;
+}
+
+.edge-tape--left {
+  top: 22%;
+  left: -7rem;
+  transform: rotate(-90deg);
+}
+
+.edge-tape--right {
+  right: -8rem;
+  bottom: 24%;
+  transform: rotate(90deg);
+}
+
+#experience[data-chapter='1'] .edge-tape {
+  color: #100807;
+  background: #ff6d1c;
+  opacity: 0.52;
+}
+
+#experience[data-chapter='2'] .edge-tape {
+  color: #120418;
+  background: #ff43a8;
+  opacity: 0.68;
+}
+
+#experience[data-chapter='3'] .edge-tape {
+  color: #0c0312;
+  background: #c879ff;
+  opacity: 0.34;
+}

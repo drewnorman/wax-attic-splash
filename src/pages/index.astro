@@ -6,17 +6,207 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   title="Wax Attic"
   description="A unique clothing collection inspired by natural selection"
 >
-  <main id="game-container" aria-label="Wax Attic splash">
-    <canvas id="game"></canvas>
-    <a id="enterSite" href="https://waxattic.com" hidden>shop &gt;</a>
-    <div id="loadingOverlay" aria-live="polite">
-      <span id="loadingIndicator"></span>
+  <main id="experience" aria-label="Wax Attic evolution" data-chapter="0">
+    <div class="backdrop" aria-hidden="true">
+      <div class="backdrop__sludge"></div>
+      <div class="backdrop__motifs">
+        <div class="motif-scene motif-scene--pressing">
+          <div class="bio-smear bio-smear--left"></div>
+          <div class="bio-smear bio-smear--right"></div>
+          <div class="wax-wall">WAX WAX WAX WAX WAX WAX WAX WAX</div>
+        </div>
+        <div class="motif-scene motif-scene--lag">
+          <div class="signal-tunnel signal-tunnel--a"></div>
+          <div class="signal-tunnel signal-tunnel--b"></div>
+          <div class="signal-tunnel signal-tunnel--c"></div>
+          <div class="signal-tear signal-tear--a"></div>
+          <div class="signal-tear signal-tear--b"></div>
+        </div>
+        <div class="motif-scene motif-scene--darkness">
+          <video
+            class="skull-strip skull-strip--top ambient-video"
+            src="/images/skull-banner.mp4"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"></video>
+          <video
+            class="skull-strip skull-strip--bottom ambient-video"
+            src="/images/skull-banner.mp4"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"></video>
+          <div class="warning-ring">
+            ETERNAL · DARKNESS · ETERNAL · DARKNESS ·
+          </div>
+        </div>
+        <div class="motif-scene motif-scene--attic">
+          <div class="attic-portal">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="attic-mold"></div>
+          <div class="attic-mark">A WAX ATTIC<br />ORIGINAL</div>
+        </div>
+      </div>
+      <div class="backdrop__grain"></div>
     </div>
+
+    <canvas id="burnCanvas" aria-hidden="true"></canvas>
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <canvas id="smokeCanvas" aria-hidden="true"></canvas>
+
+    <div class="analog-overlay" aria-hidden="true">
+      <canvas id="overlayParticles"></canvas>
+      <div class="analog-overlay__scanlines"></div>
+      <div class="analog-overlay__roll"></div>
+      <div class="analog-overlay__rgb"></div>
+      <div class="analog-overlay__noise"></div>
+      <div class="analog-overlay__tear analog-overlay__tear--a"></div>
+      <div class="analog-overlay__tear analog-overlay__tear--b"></div>
+      <div class="analog-overlay__vignette"></div>
+    </div>
+
+    <div class="foreground-motifs" aria-hidden="true">
+      <div class="edge-tape edge-tape--left">
+        <div class="edge-tape__track">
+          <span>WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span><span
+            >WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span
+          >
+        </div>
+      </div>
+      <div class="edge-tape edge-tape--right">
+        <div class="edge-tape__track">
+          <span>1 / 1 · NATURAL SELECTION · 1 / 1 ·&nbsp;</span><span
+            >1 / 1 · NATURAL SELECTION · 1 / 1 ·&nbsp;</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="story" aria-live="polite">
+      <section
+        class="chapter is-active"
+        data-index="0"
+        aria-labelledby="chapter-0-title"
+      >
+        <p class="chapter__number" aria-hidden="true">001 / 004</p>
+        <h1 id="chapter-0-title">SECOND<br />LIFE</h1>
+        <button class="scroll-cue observer-ignore" id="scrollCue" type="button">
+          scroll / swipe to evolve <span aria-hidden="true">↓</span>
+        </button>
+      </section>
+
+      <section
+        class="chapter"
+        data-index="1"
+        aria-labelledby="chapter-1-title"
+        aria-hidden="true"
+        inert
+      >
+        <p class="chapter__number" aria-hidden="true">002 / 004</p>
+        <h2 id="chapter-1-title">NATURAL<br />SELECTION</h2>
+      </section>
+
+      <section
+        class="chapter"
+        data-index="2"
+        aria-labelledby="chapter-2-title"
+        aria-hidden="true"
+        inert
+      >
+        <div class="chapter__title-block">
+          <p class="chapter__number" aria-hidden="true">003 / 004</p>
+          <h2 id="chapter-2-title">ONE OF<br />ONE</h2>
+        </div>
+      </section>
+
+      <section
+        class="chapter chapter--final"
+        data-index="3"
+        aria-labelledby="chapter-3-title"
+        aria-hidden="true"
+        inert
+      >
+        <p class="chapter__number" aria-hidden="true">004 / 004</p>
+        <div class="chapter__final-copy">
+          <h2 id="chapter-3-title">MADE IN A<br />WAX ATTIC</h2>
+          <a class="shop-link observer-ignore" href="https://waxattic.com/">
+            shop now <span aria-hidden="true">&gt;</span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <nav class="progress observer-ignore" aria-label="Story chapters">
+      <span class="progress__track" aria-hidden="true"
+        ><span class="progress__fill"></span></span
+      >
+      <button
+        class="progress__mark is-active"
+        type="button"
+        data-target="0"
+        aria-label="Second Life"
+        aria-current="step"><span>01</span></button
+      >
+      <button
+        class="progress__mark"
+        type="button"
+        data-target="1"
+        aria-label="Natural Selection"><span>02</span></button
+      >
+      <button
+        class="progress__mark"
+        type="button"
+        data-target="2"
+        aria-label="One of One"><span>03</span></button
+      >
+      <button
+        class="progress__mark"
+        type="button"
+        data-target="3"
+        aria-label="Made in a Wax Attic"><span>04</span></button
+      >
+    </nav>
+
+    <div id="loadingOverlay" aria-live="polite">
+      <div class="boot-panel">
+        <p class="boot-panel__brand">WAX ATTIC / SIGNAL BOOT</p>
+        <div class="boot-panel__readout">
+          <span id="loadingStatus">INITIALIZING</span><span
+            id="loadingIndicator"></span><span id="loadingPercent">00%</span
+          ><span class="boot-panel__cursor" aria-hidden="true"></span>
+        </div>
+        <div class="boot-panel__bar" aria-hidden="true">
+          <span id="loadingBarFill"></span>
+        </div>
+        <div class="boot-panel__checks">
+          <span data-load-task="webgl">WEBGL <b data-task-state>WAIT</b></span>
+          <span data-load-task="head"
+            >HEAD MESH <b data-task-state>WAIT</b></span
+          >
+          <span data-load-task="texture"
+            >WAX MAP <b data-task-state>WAIT</b></span
+          >
+          <span data-load-task="signals"
+            >SIGNAL TEXTURES <b data-task-state>WAIT</b></span
+          >
+          <span data-load-task="typeface"
+            >TYPEFACE <b data-task-state>WAIT</b></span
+          >
+          <span data-load-task="video">VIDEO <b data-task-state>WAIT</b></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="burn-cursor" aria-hidden="true"><span></span></div>
   </main>
 </BaseLayout>
 
 <script>
-  import Game from '../game';
+  import createExperience from '../game';
 
-  Game();
+  createExperience();
 </script>

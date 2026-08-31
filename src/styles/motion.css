@@ -1,0 +1,294 @@
+@keyframes sludge-a {
+  from {
+    transform: translate3d(-5%, -2%, 0) rotate(-8deg) scale(0.88);
+  }
+
+  to {
+    transform: translate3d(14%, 17%, 0) rotate(15deg) scale(1.12);
+  }
+}
+
+@keyframes sludge-b {
+  from {
+    transform: translate3d(7%, 5%, 0) rotate(9deg) scale(1.08);
+  }
+
+  to {
+    transform: translate3d(-16%, -13%, 0) rotate(-12deg) scale(0.86);
+  }
+}
+
+@keyframes cue {
+  0%,
+  100% {
+    transform: translateY(-0.1rem);
+  }
+
+  50% {
+    transform: translateY(0.35rem);
+  }
+}
+
+@keyframes motif-float {
+  from {
+    translate: -2% -3%;
+    rotate: -2deg;
+  }
+
+  to {
+    translate: 5% 6%;
+    rotate: 4deg;
+  }
+}
+
+@keyframes signal-pulse {
+  0% {
+    opacity: 0.18;
+    scale: 0.82;
+    filter: hue-rotate(-12deg);
+  }
+
+  48% {
+    opacity: 0.62;
+  }
+
+  100% {
+    opacity: 0.28;
+    scale: 1.16;
+    filter: hue-rotate(36deg);
+  }
+}
+
+@keyframes signal-scan {
+  0% {
+    translate: -8% -18vh;
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 0.8;
+  }
+
+  42% {
+    translate: 7% 18vh;
+    opacity: 0.32;
+  }
+
+  43%,
+  100% {
+    translate: -4% 62vh;
+    opacity: 0;
+  }
+}
+
+@keyframes scan-crawl {
+  to {
+    background-position-y: 4px;
+  }
+}
+
+@keyframes field-roll {
+  0% {
+    translate: 0 -32vh;
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 0.7;
+  }
+
+  92% {
+    opacity: 0.35;
+  }
+
+  100% {
+    translate: 0 108vh;
+    opacity: 0;
+  }
+}
+
+@keyframes chroma-slip {
+  0%,
+  86%,
+  100% {
+    translate: 0;
+    opacity: 0.34;
+  }
+
+  87% {
+    translate: 0.32rem 0;
+    opacity: 0.72;
+  }
+
+  89% {
+    translate: -0.22rem 0.08rem;
+    opacity: 0.18;
+  }
+
+  91% {
+    translate: 0.08rem 0;
+    opacity: 0.54;
+  }
+}
+
+@keyframes analog-flicker {
+  0%,
+  91%,
+  100% {
+    opacity: 0.16;
+    translate: 0 0;
+  }
+
+  92% {
+    opacity: 0.48;
+    translate: -0.7% 0.2%;
+  }
+
+  94% {
+    opacity: 0.08;
+    translate: 0.5% -0.1%;
+  }
+
+  96% {
+    opacity: 0.34;
+    translate: -0.2% 0;
+  }
+}
+
+@keyframes tracking-tear {
+  0%,
+  72%,
+  100% {
+    translate: 0 -12vh;
+    scale: 1 0.3;
+  }
+
+  73% {
+    translate: 7% 8vh;
+    scale: 1 1.8;
+  }
+
+  77% {
+    translate: -5% 33vh;
+    scale: 1 0.7;
+  }
+
+  81% {
+    translate: 3% 61vh;
+    scale: 1 1.2;
+  }
+
+  82% {
+    translate: 0 92vh;
+    scale: 1 0.2;
+  }
+}
+
+@keyframes ring-turn {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes grunge-stutter {
+  0%,
+  78%,
+  100% {
+    translate: 0;
+    filter: contrast(1.2) saturate(1.15);
+  }
+
+  79% {
+    translate: -1.2% 0.4%;
+    filter: contrast(1.8) saturate(1.6);
+  }
+
+  80% {
+    translate: 0.8% -0.2%;
+    opacity: 0.08;
+  }
+
+  82% {
+    translate: -0.2% 0;
+  }
+}
+
+@keyframes portal-jolt {
+  0%,
+  88%,
+  100% {
+    translate: 0;
+    filter: drop-shadow(-1.2rem 0 rgb(15 237 25 / 12%))
+      drop-shadow(1rem 0 rgb(255 58 155 / 11%));
+  }
+
+  89% {
+    translate: -0.8rem 0.15rem;
+    filter: drop-shadow(1.4rem 0 rgb(15 237 25 / 30%))
+      drop-shadow(-1rem 0 rgb(255 58 155 / 28%));
+  }
+
+  91% {
+    translate: 0.45rem -0.08rem;
+  }
+
+  93% {
+    translate: 0;
+  }
+}
+
+@keyframes cursor-burn {
+  0%,
+  100% {
+    rotate: -3deg;
+    scale: 0.96;
+  }
+
+  50% {
+    rotate: 4deg;
+    scale: 1.06;
+  }
+}
+
+@keyframes tape-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes boot-blink {
+  0%,
+  48% {
+    opacity: 1;
+  }
+
+  49%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes boot-release {
+  0% {
+    opacity: 1;
+    transform: translate(0);
+    clip-path: inset(0);
+  }
+
+  36% {
+    transform: translate(-0.5rem, 0.08rem);
+    clip-path: inset(18% 0 52%);
+  }
+
+  68% {
+    opacity: 0.76;
+    transform: translate(0.7rem, -0.08rem);
+    clip-path: inset(56% 0 12%);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-1rem, 0);
+    clip-path: inset(49% 0 49%);
+  }
+}

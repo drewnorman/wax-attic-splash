@@ -9,6 +9,6 @@ export default {
   url,
   image: `${url}/images/wax-texture.png`,
   fontUrls: {
-    base: 'https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&display=swap',
+    base: 'https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=Figtree:wght@400&display=swap',
   },
 };

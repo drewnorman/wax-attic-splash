@@ -1,0 +1,456 @@
+.backdrop,
+.backdrop__sludge,
+.backdrop__motifs,
+.backdrop__grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.backdrop {
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 46%, rgb(15 35 17 / 34%), transparent 31%),
+    linear-gradient(145deg, #020303, #0a0d0a 52%, #020403);
+}
+
+#experience[data-chapter='0'] .backdrop {
+  background:
+    radial-gradient(circle at 47% 44%, #c2c7bd 0 7%, transparent 35%),
+    linear-gradient(142deg, #9ea39b, #b5b8b0 54%, #90968e);
+}
+
+#experience[data-chapter='1'] .backdrop {
+  background:
+    radial-gradient(circle at 54% 48%, #c2bdb4, transparent 38%),
+    linear-gradient(155deg, #aaa69f, #b9b7b0 55%, #8f918b);
+}
+
+#experience[data-chapter='3'] .backdrop {
+  background:
+    radial-gradient(ellipse at 50% 48%, #bec2bc, transparent 43%),
+    linear-gradient(135deg, #9da19d, #b4b7b2 52%, #8d918e);
+}
+
+#experience[data-chapter='0'] .chapter,
+#experience[data-chapter='1'] .chapter,
+#experience[data-chapter='3'] .chapter {
+  color: #092a10;
+}
+
+#experience[data-chapter='0'] .chapter__number,
+#experience[data-chapter='1'] .chapter__number,
+#experience[data-chapter='3'] .chapter__number,
+#experience[data-chapter='0'] .scroll-cue {
+  color: rgb(4 37 11 / 72%);
+}
+
+.backdrop__motifs {
+  overflow: hidden;
+}
+
+.motif-scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.08);
+  translate: var(--parallax-mid-x) var(--parallax-mid-y);
+  transition:
+    opacity 850ms ease,
+    transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.motif-scene::after {
+  position: absolute;
+  inset: -8%;
+  background-position: center;
+  background-size: min(68rem, 92vmax);
+  content: '';
+  filter: contrast(1.2) saturate(1.15);
+  mix-blend-mode: screen;
+  opacity: 0.17;
+  pointer-events: none;
+  transform: translate3d(var(--parallax-near-x), var(--parallax-near-y), 0)
+    scale(1.08);
+  animation: grunge-stutter 6.8s steps(1, end) infinite;
+}
+
+.motif-scene--pressing::after {
+  background-image: url('/images/grunge-pressing.webp');
+  opacity: 0.15;
+}
+
+.motif-scene--lag::after {
+  background-image: url('/images/grunge-lag.webp');
+  opacity: 0.22;
+  animation-duration: 3.7s;
+}
+
+.motif-scene--darkness::after {
+  background-image: url('/images/grunge-darkness.webp');
+  opacity: 0.3;
+  animation-duration: 2.9s;
+}
+
+.motif-scene--attic::after {
+  background-image: url('/images/grunge-attic.webp');
+  opacity: 0.22;
+  animation-duration: 5.1s;
+}
+
+#experience[data-chapter='0'] .motif-scene--pressing,
+#experience[data-chapter='1'] .motif-scene--lag,
+#experience[data-chapter='2'] .motif-scene--darkness,
+#experience[data-chapter='3'] .motif-scene--attic {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.bio-smear {
+  position: absolute;
+  width: clamp(15rem, 32vw, 34rem);
+  aspect-ratio: 1.25;
+  background:
+    url('/images/grunge-pressing.webp') center / cover,
+    repeating-radial-gradient(
+      ellipse at 28% 40%,
+      #365c27 0 5%,
+      #8a9948 6% 12%,
+      #263d28 13% 19%
+    );
+  border-radius: 36% 64% 43% 57% / 58% 31% 69% 42%;
+  clip-path: polygon(
+    3% 20%,
+    21% 5%,
+    47% 12%,
+    68% 0,
+    91% 19%,
+    84% 44%,
+    100% 67%,
+    73% 91%,
+    48% 82%,
+    24% 100%,
+    0 77%,
+    12% 49%
+  );
+  filter: contrast(1.5) saturate(0.75) drop-shadow(0 0 2rem rgb(37 76 28 / 40%));
+  mix-blend-mode: multiply;
+  opacity: 0.52;
+  animation: motif-float 11s ease-in-out infinite alternate;
+}
+
+.bio-smear--left {
+  top: 5%;
+  left: -7%;
+  transform: rotate(-18deg);
+}
+
+.bio-smear--right {
+  right: -8%;
+  bottom: -2%;
+  transform: rotate(17deg) scale(0.85);
+  animation-delay: -5s;
+}
+
+.wax-wall {
+  position: absolute;
+  top: 12%;
+  right: -8%;
+  width: 50vw;
+  color: rgb(15 237 25 / 18%);
+  font-size: clamp(3rem, 9vw, 9rem);
+  font-weight: 900;
+  line-height: 0.68;
+  letter-spacing: -0.12em;
+  text-align: left;
+  transform: rotate(8deg);
+  overflow-wrap: anywhere;
+}
+
+.signal-tunnel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: clamp(0.35rem, 0.8vw, 0.8rem) solid rgb(255 96 30 / 42%);
+  box-shadow:
+    inset 0 0 3rem rgb(255 55 140 / 18%),
+    0 0 2rem rgb(223 255 37 / 12%);
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%) perspective(30rem) rotateX(64deg)
+    rotateZ(-8deg);
+  animation: signal-pulse 5.2s ease-in-out infinite alternate;
+}
+
+.signal-tunnel--a {
+  width: 86vmax;
+  height: 57vmax;
+}
+
+.signal-tunnel--b {
+  width: 62vmax;
+  height: 41vmax;
+  border-color: rgb(255 53 153 / 44%);
+  animation-delay: -1.8s;
+}
+
+.signal-tunnel--c {
+  width: 38vmax;
+  height: 25vmax;
+  border-color: rgb(207 255 39 / 48%);
+  animation-delay: -3.6s;
+}
+
+.signal-tear {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  height: clamp(0.4rem, 2vh, 1.5rem);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 2rem,
+      rgb(255 77 26 / 70%) 2.1rem 3.5rem,
+      transparent 3.6rem 5rem
+    ),
+    linear-gradient(90deg, transparent, rgb(215 255 33 / 54%), transparent);
+  filter: blur(0.04rem);
+  mix-blend-mode: screen;
+  animation: signal-scan 4.2s steps(5, end) infinite;
+}
+
+.signal-tear--a {
+  top: 28%;
+}
+
+.signal-tear--b {
+  top: 66%;
+  animation-delay: -2.4s;
+  animation-direction: reverse;
+}
+
+.skull-strip {
+  position: absolute;
+  left: -4%;
+  display: block;
+  width: 108%;
+  opacity: 0.58;
+  filter: hue-rotate(28deg) saturate(1.45) contrast(1.2);
+  mix-blend-mode: screen;
+  object-fit: cover;
+}
+
+.skull-strip--top {
+  top: -4%;
+  transform: rotate(-4deg);
+}
+
+.skull-strip--bottom {
+  bottom: -7%;
+  transform: rotate(5deg) scaleX(-1);
+}
+
+.warning-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 64vmax;
+  height: 64vmax;
+  border: 1.2rem double rgb(177 36 255 / 24%);
+  border-radius: 50%;
+  color: rgb(255 67 168 / 24%);
+  font-size: clamp(1rem, 2.2vw, 2.2rem);
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  transform: translate(-50%, -50%);
+  animation: ring-turn 22s linear infinite;
+}
+
+.attic-portal {
+  position: absolute;
+  top: -8%;
+  left: 50%;
+  width: min(66vw, 54rem);
+  height: 116%;
+  background:
+    linear-gradient(
+      116deg,
+      transparent 8%,
+      rgb(190 66 255 / 42%) 8.5% 11%,
+      transparent 11.5% 88%,
+      rgb(63 255 93 / 34%) 88.5% 91%,
+      transparent 91.5%
+    ),
+    radial-gradient(ellipse at 50% 45%, rgb(105 18 145 / 24%), transparent 58%);
+  clip-path: polygon(
+    8% 0,
+    34% 4%,
+    48% 0,
+    73% 6%,
+    94% 1%,
+    88% 21%,
+    96% 38%,
+    90% 55%,
+    97% 72%,
+    87% 100%,
+    72% 94%,
+    52% 100%,
+    32% 95%,
+    9% 100%,
+    14% 79%,
+    4% 61%,
+    11% 43%,
+    3% 24%
+  );
+  filter: drop-shadow(-1.2rem 0 rgb(15 237 25 / 12%))
+    drop-shadow(1rem 0 rgb(255 58 155 / 11%));
+  transform: translateX(-50%) rotate(-1.5deg);
+  animation: portal-jolt 5.4s steps(1, end) infinite;
+}
+
+.attic-portal::before,
+.attic-portal::after {
+  position: absolute;
+  inset: 5% 8%;
+  border: clamp(0.18rem, 0.6vw, 0.55rem) solid rgb(193 75 255 / 52%);
+  clip-path: polygon(
+    0 0,
+    37% 2%,
+    52% 0,
+    100% 5%,
+    96% 32%,
+    100% 63%,
+    94% 100%,
+    57% 97%,
+    31% 100%,
+    3% 94%,
+    7% 65%,
+    0 37%
+  );
+  content: '';
+}
+
+.attic-portal::after {
+  inset: 9% 12%;
+  border-color: rgb(39 255 93 / 38%);
+  transform: translate(0.8rem, -0.45rem);
+}
+
+.attic-portal span {
+  position: absolute;
+  width: 32%;
+  height: 0.6rem;
+  background: #c94cff;
+  box-shadow: 0 0 1rem rgb(194 65 255 / 42%);
+  opacity: 0.48;
+}
+
+.attic-portal span:nth-child(1) {
+  top: 21%;
+  left: -3%;
+  transform: rotate(-13deg);
+}
+
+.attic-portal span:nth-child(2) {
+  top: 56%;
+  right: -5%;
+  transform: rotate(9deg);
+}
+
+.attic-portal span:nth-child(3) {
+  bottom: 12%;
+  left: 8%;
+  width: 44%;
+  transform: rotate(4deg);
+}
+
+.attic-mold {
+  position: absolute;
+  bottom: -11%;
+  left: -6%;
+  width: clamp(18rem, 34vw, 37rem);
+  aspect-ratio: 1;
+  background:
+    url('/images/grunge-attic.webp') center / cover,
+    conic-gradient(from 28deg, #633b70, #345f3b, #9b7d78, #633b70);
+  border-radius: 44% 56% 63% 37% / 52% 37% 63% 48%;
+  clip-path: polygon(
+    7% 12%,
+    38% 2%,
+    66% 13%,
+    92% 5%,
+    85% 39%,
+    100% 68%,
+    73% 92%,
+    42% 82%,
+    13% 100%,
+    0 61%
+  );
+  filter: contrast(1.4) saturate(0.8);
+  mix-blend-mode: multiply;
+  opacity: 0.36;
+  transform: rotate(-16deg);
+}
+
+.attic-mark {
+  position: absolute;
+  top: 13%;
+  right: 5%;
+  color: rgb(208 126 255 / 34%);
+  font-size: clamp(1rem, 2.4vw, 2.5rem);
+  font-weight: 900;
+  line-height: 0.82;
+  letter-spacing: -0.06em;
+  text-align: right;
+  transform: rotate(5deg);
+}
+
+.backdrop__sludge {
+  opacity: var(--glow-opacity);
+  filter: hue-rotate(var(--backdrop-hue)) blur(55px) saturate(145%);
+  transform: scale(var(--glow-scale));
+  translate: var(--parallax-far-x) var(--parallax-far-y);
+  transition: filter 600ms ease;
+}
+
+.backdrop__sludge::before,
+.backdrop__sludge::after {
+  position: absolute;
+  width: 62vmax;
+  height: 38vmax;
+  border-radius: 44% 56% 61% 39% / 46% 36% 64% 54%;
+  content: '';
+  mix-blend-mode: screen;
+}
+
+.backdrop__sludge::before {
+  top: -20vmax;
+  left: -17vmax;
+  background: radial-gradient(
+    ellipse,
+    rgb(4 116 27 / 62%),
+    rgb(2 21 8 / 14%) 54%,
+    transparent 72%
+  );
+  animation: sludge-a 18s ease-in-out infinite alternate;
+}
+
+.backdrop__sludge::after {
+  right: -23vmax;
+  bottom: -16vmax;
+  background: radial-gradient(
+    ellipse,
+    rgb(126 156 9 / 32%),
+    rgb(5 67 16 / 20%) 48%,
+    transparent 72%
+  );
+  animation: sludge-b 22s ease-in-out infinite alternate;
+}
+
+.backdrop__grain {
+  opacity: var(--grain-opacity);
+  background-image: url('/images/statik.gif');
+  background-position: center;
+  background-size: auto 38vh;
+  mix-blend-mode: soft-light;
+}

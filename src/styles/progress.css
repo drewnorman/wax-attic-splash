@@ -1,0 +1,69 @@
+.progress {
+  position: absolute;
+  z-index: 8;
+  top: 50%;
+  right: clamp(0.8rem, 2.6vw, 2.2rem);
+  display: grid;
+  gap: 0.35rem;
+  transform: translateY(-50%);
+}
+
+.progress__track {
+  position: absolute;
+  top: 1.2rem;
+  right: 0.23rem;
+  bottom: 1.2rem;
+  width: 3px;
+  overflow: hidden;
+  background: rgb(4 24 7 / 48%);
+  box-shadow: 0 0 0 1px rgb(215 255 218 / 24%);
+}
+
+.progress__fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0.65rem rgb(15 237 25 / 78%);
+  transform: scaleY(var(--story-progress));
+  transform-origin: top;
+}
+
+.progress__mark {
+  position: relative;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.progress__mark span {
+  position: absolute;
+  top: 50%;
+  right: 1.1rem;
+  color: rgb(5 28 10 / 72%);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  transform: translateY(-50%);
+  transition:
+    color 200ms,
+    transform 200ms;
+}
+
+.progress__mark::before {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 0.65rem;
+  height: 3px;
+  background: rgb(5 27 10 / 62%);
+  content: '';
+  transition:
+    width 300ms ease,
+    background-color 300ms ease;
+}
