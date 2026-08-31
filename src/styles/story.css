@@ -5,7 +5,7 @@
 }
 
 .story {
-  z-index: 6;
+  z-index: 8;
   pointer-events: none;
 }
 
@@ -35,6 +35,91 @@
   letter-spacing: 0;
   pointer-events: auto;
   will-change: filter, opacity, transform;
+}
+
+.stage-indicator {
+  position: absolute;
+  z-index: 2;
+  left: calc(clamp(1.35rem, 5vw, 4.5rem) - 0.58rem);
+  bottom: calc(clamp(1.35rem, 5vw, 4.5rem) + clamp(3.1rem, 8.9vw, 8rem) + 1rem);
+  display: flex;
+  gap: clamp(0.38rem, 0.9vw, 0.72rem);
+  margin: 0;
+  padding: 0.52rem 0.64rem 0.48rem;
+  color: var(--color-primary);
+  border: 1px solid transparent;
+  background: transparent;
+  box-shadow: none;
+  font-size: clamp(1.25rem, 2.25vw, 1.85rem);
+  opacity: 0;
+  pointer-events: auto;
+  transform: translateX(-1.2rem);
+  transition:
+    opacity 420ms steps(5, end),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: stage-indicator-idle 4.6s ease-in-out infinite alternate;
+}
+
+#experience[data-chapter='2'] .stage-indicator {
+  border-color: rgb(166 255 176 / 16%);
+  background: linear-gradient(
+    92deg,
+    rgb(1 5 3 / 84%),
+    rgb(6 14 8 / 58%) 72%,
+    transparent
+  );
+  box-shadow:
+    0 0 0.8rem rgb(15 237 25 / 9%),
+    inset 0 0 0.7rem rgb(15 237 25 / 5%);
+  clip-path: polygon(
+    2% 7%,
+    98% 0,
+    95% 28%,
+    100% 55%,
+    96% 94%,
+    3% 100%,
+    0 64%,
+    4% 36%
+  );
+}
+
+#experience:not([data-chapter='0']) .stage-indicator {
+  opacity: 1;
+  transform: none;
+}
+
+.stage-indicator span {
+  opacity: 0.28;
+  transition:
+    color 220ms steps(3, end),
+    filter 220ms steps(3, end),
+    opacity 220ms steps(3, end),
+    transform 220ms steps(3, end);
+}
+
+#experience[data-chapter='1'] .stage-indicator span:nth-child(-n + 3),
+#experience[data-chapter='2'] .stage-indicator span:nth-child(-n + 6),
+#experience[data-chapter='3'] .stage-indicator span:nth-child(-n + 9) {
+  color: var(--color-primary);
+  opacity: 0.96;
+  filter: drop-shadow(0 0 0.42rem rgb(15 237 25 / 58%));
+  animation: stage-glyph-shimmer 2.8s ease-in-out infinite alternate;
+}
+
+.stage-indicator span:nth-child(3n + 2) {
+  animation-delay: -0.9s;
+}
+
+.stage-indicator span:nth-child(3n + 3) {
+  animation-delay: -1.8s;
+}
+
+.stage-indicator:hover span {
+  transform: translateY(-0.12rem);
+}
+
+.stage-indicator:hover span:nth-child(3n + 2) {
+  transform: translateY(0.1rem);
 }
 
 .chapter__sigil-strip span {
@@ -90,12 +175,43 @@
   font-size: clamp(1.85rem, 5.7vw, 5.1rem);
   line-height: 0.78;
   letter-spacing: -0.08em;
-  text-transform: uppercase;
+  text-transform: none;
   color: var(--color-primary);
   text-shadow:
     0 0 0.18rem rgb(15 237 25 / 34%),
     0 0 0.7rem rgb(15 237 25 / 12%);
   will-change: filter, opacity, transform;
+}
+
+.title-visual,
+.title-line {
+  display: block;
+}
+
+.title-line {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.title-char {
+  display: inline-block;
+  transform-origin: center bottom;
+}
+
+.title-space {
+  display: inline-block;
+  flex: 0 0 0.34em;
+  width: 0.34em;
+}
+
+.title-char.is-title-char-italic {
+  font-style: italic;
+  transform: skewX(-4deg) translateX(0.02em);
+}
+
+.chapter h2.is-title-italic .title-char {
+  font-style: italic;
 }
 
 .chapter[data-index='2'] .chapter__title-block {
@@ -107,10 +223,19 @@
 }
 
 .chapter[data-index='2'] h2 {
+  font-size: clamp(1.55rem, 4.05vw, 3.75rem);
   color: inherit;
   text-shadow:
     0 0 0.15rem #061007,
     0 0 1.6rem rgb(35 255 93 / 54%);
+}
+
+.chapter[data-index='1'] h2 {
+  font-size: clamp(1.2rem, 3.45vw, 3.1rem);
+}
+
+.chapter[data-index='3'] h2 {
+  font-size: clamp(1.05rem, 2.65vw, 2.4rem);
 }
 
 .chapter[data-index='2'] .chapter__sigil-strip {
@@ -140,14 +265,28 @@
 }
 
 .scroll-cue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: clamp(1.4rem, 3vw, 2.3rem);
-  padding: 0.6rem 0;
-  border: 0;
-  color: rgb(184 252 185 / 78%);
-  background: transparent;
+  position: relative;
+  padding: 0.75rem 1.08rem;
+  border: 1px solid rgb(190 255 195 / 30%);
+  color: rgb(218 255 219 / 94%);
+  background: linear-gradient(
+    96deg,
+    rgb(2 10 4 / 90%),
+    rgb(4 22 8 / 72%) 76%,
+    rgb(8 38 12 / 24%)
+  );
+  box-shadow:
+    0 0 1rem rgb(15 237 25 / 14%),
+    inset 0 0 0.75rem rgb(20 255 42 / 8%);
   cursor: pointer;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  font-size: clamp(0.96rem, 1.35vw, 1.16rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.065em;
   pointer-events: auto;
   text-transform: lowercase;
   opacity: 0;
@@ -156,12 +295,25 @@
   will-change: clip-path, filter, opacity, transform;
 }
 
+.chapter[data-index='0'] {
+  justify-items: center;
+}
+
+.chapter[data-index='0'] .scroll-cue {
+  margin-top: 0;
+}
+
 #experience.is-introduced .scroll-cue {
-  animation: cue-intro 760ms steps(7, end) forwards;
+  animation:
+    cue-intro 760ms steps(7, end) forwards,
+    cue-idle-glow 3.8s 1.25s ease-in-out infinite alternate;
 }
 
 .scroll-cue span {
   display: inline-block;
+  margin-left: 0.24rem;
+  font-size: 1.3em;
+  filter: drop-shadow(0 0 0.35rem #51ff68);
   animation: cue 1.4s ease-in-out infinite;
 }
 
@@ -183,7 +335,7 @@
   padding: 0.45rem 0.2rem;
   font-family: var(--font-heading);
   font-weight: 400;
-  font-size: clamp(1.25rem, 2.8vw, 2.35rem);
+  font-size: clamp(1.85rem, 3.9vw, 3.5rem);
   letter-spacing: -0.04em;
   opacity: 0;
   pointer-events: none;
@@ -198,11 +350,12 @@
 }
 
 .shop-link.is-revealing {
-  animation: shop-signal-lock 920ms steps(9, end) forwards;
+  animation: shop-signal-lock 1.08s steps(5, end) forwards;
 }
 
 .shop-link.is-revealed {
   transform: rotate(-1.5deg);
+  animation: shop-idle-callout 2.8s 0.8s steps(4, end) infinite;
 }
 
 .shop-link__label {
@@ -237,7 +390,7 @@
 }
 
 .shop-link.is-revealing .shop-link__label::after {
-  animation: shop-underline 520ms 430ms steps(7, end) forwards;
+  animation: shop-underline 620ms 430ms steps(3, end) forwards;
 }
 
 .shop-link.is-revealed .shop-link__label::after {
@@ -267,7 +420,7 @@
 }
 
 .shop-link.is-revealing .shop-link__cover {
-  animation: shop-scan 720ms 120ms steps(9, end) forwards;
+  animation: shop-scan 840ms 120ms steps(4, end) forwards;
 }
 
 .shop-link.is-revealed .shop-link__cover {
@@ -279,6 +432,7 @@
   color: #baff39;
   opacity: 1;
   transform: translate(-0.08rem, -0.1rem) rotate(-2deg);
+  animation: none;
 }
 
 .shop-link:hover .shop-link__label::after,

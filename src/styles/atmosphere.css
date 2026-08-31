@@ -15,6 +15,208 @@
     linear-gradient(145deg, #020303, #0a0d0a 52%, #020403);
 }
 
+.paint-atmosphere {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  --paint-a: #65ff32;
+  --paint-b: #eaff24;
+  --paint-c: #12db86;
+  --paint-d: #f3ffb0;
+
+  transition:
+    filter 700ms steps(5, end),
+    opacity 700ms ease;
+}
+
+#experience[data-chapter='1'] .paint-atmosphere {
+  --paint-a: #ff5c19;
+  --paint-b: #ff2f9d;
+  --paint-c: #ddff21;
+  --paint-d: #ffab27;
+}
+
+#experience[data-chapter='2'] .paint-atmosphere {
+  --paint-a: #ff1f9c;
+  --paint-b: #19f7ff;
+  --paint-c: #baff18;
+  --paint-d: #ff5ac8;
+}
+
+#experience[data-chapter='3'] .paint-atmosphere {
+  --paint-a: #9c38ff;
+  --paint-b: #14eaff;
+  --paint-c: #ff28c8;
+  --paint-d: #c5ff25;
+}
+
+.paint-atmosphere__layer {
+  position: absolute;
+  inset: -8%;
+  opacity: 0.62;
+  transform: translate3d(var(--parallax-far-x), var(--parallax-far-y), 0)
+    scale(1.22);
+  animation:
+    paint-rear-flicker 8.7s -2.1s steps(1, end) infinite,
+    paint-rear-idle-0 13s ease-in-out infinite alternate;
+}
+
+.paint-atmosphere__layer--near {
+  opacity: 0.56;
+  transform: translate3d(var(--parallax-mid-x), var(--parallax-mid-y), 0)
+    scale(1.05);
+  animation:
+    paint-near-flicker 6.4s -4.3s steps(1, end) infinite,
+    paint-near-idle-0 10.5s ease-in-out infinite alternate;
+}
+
+#experience[data-chapter='1'] .paint-atmosphere__layer--rear {
+  animation-name: paint-rear-flicker, paint-rear-idle-1;
+  animation-duration: 8.7s, 11.5s;
+}
+
+#experience[data-chapter='1'] .paint-atmosphere__layer--near {
+  animation-name: paint-near-flicker, paint-near-idle-1;
+  animation-duration: 6.4s, 9.5s;
+}
+
+#experience[data-chapter='2'] .paint-atmosphere__layer--rear {
+  animation-name: paint-rear-flicker, paint-rear-idle-2;
+  animation-duration: 7.6s, 7.8s;
+}
+
+#experience[data-chapter='2'] .paint-atmosphere__layer--near {
+  animation-name: paint-near-flicker, paint-near-idle-2;
+  animation-duration: 5.2s, 5.8s;
+}
+
+#experience[data-chapter='3'] .paint-atmosphere__layer--rear {
+  animation-name: paint-rear-flicker, paint-rear-idle-3;
+  animation-duration: 9.8s, 14s;
+}
+
+#experience[data-chapter='3'] .paint-atmosphere__layer--near {
+  animation-name: paint-near-flicker, paint-near-idle-3;
+  animation-duration: 7.1s, 11s;
+}
+
+.paint-mask {
+  position: absolute;
+  display: block;
+  color: var(--paint-a);
+  background: currentcolor;
+  mask-image: var(--paint-mask);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  mix-blend-mode: screen;
+  opacity: 0.22;
+  animation: ambient-paint-glitch 5.4s var(--paint-delay, 0s) steps(1, end)
+    infinite;
+}
+
+.paint-mask--dense {
+  --paint-mask: url('/images/paint-grunge-dense.png');
+
+  aspect-ratio: 285 / 518;
+}
+
+.paint-mask--scatter {
+  --paint-mask: url('/images/paint-grunge-scatter.png');
+
+  aspect-ratio: 285 / 518;
+}
+
+.paint-mask--burst {
+  --paint-mask: url('/images/paint-grunge-burst.png');
+
+  aspect-ratio: 1500 / 1004;
+}
+
+.paint-atmosphere__layer--rear .paint-mask--dense {
+  top: -16%;
+  left: -3%;
+  width: clamp(16rem, 31vw, 35rem);
+  rotate: -8deg;
+
+  --paint-delay: -1.7s;
+}
+
+.paint-atmosphere__layer--rear .paint-mask--scatter {
+  top: -11%;
+  right: 3%;
+  width: clamp(14rem, 27vw, 30rem);
+  rotate: 11deg;
+  color: var(--paint-b);
+
+  --paint-delay: -3.8s;
+}
+
+.paint-atmosphere__layer--rear .paint-mask--burst {
+  right: 2%;
+  bottom: -21%;
+  width: min(88vw, 86rem);
+  rotate: -4deg;
+  color: var(--paint-c);
+
+  --paint-delay: -0.9s;
+}
+
+.paint-atmosphere__layer--near .paint-mask {
+  opacity: 0.31;
+  animation-duration: 3.7s;
+}
+
+.paint-atmosphere__layer--near .paint-mask--dense {
+  right: -3%;
+  bottom: -22%;
+  width: clamp(13rem, 24vw, 27rem);
+  rotate: 16deg;
+  color: var(--paint-d);
+
+  --paint-delay: -2.6s;
+}
+
+.paint-atmosphere__layer--near .paint-mask--scatter {
+  top: 12%;
+  left: -4%;
+  width: clamp(12rem, 22vw, 25rem);
+  rotate: -17deg;
+  color: var(--paint-c);
+
+  --paint-delay: -0.4s;
+}
+
+.paint-atmosphere__layer--near .paint-mask--burst {
+  top: 3%;
+  left: 18%;
+  width: min(72vw, 70rem);
+  rotate: 7deg;
+  color: var(--paint-a);
+
+  --paint-delay: -1.4s;
+}
+
+.paint-mask::after {
+  position: absolute;
+  inset: 0;
+  background: currentcolor;
+  mask-image: var(--paint-mask);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  clip-path: inset(38% 0 34% 0);
+  content: '';
+  filter: hue-rotate(115deg) saturate(1.8);
+  opacity: 0;
+  transform: translateX(0.7rem) scaleX(1.12);
+  animation: ambient-paint-echo 3.1s var(--paint-delay, 0s) steps(1, end)
+    infinite;
+}
+
 #experience[data-chapter='0'] .backdrop {
   background:
     radial-gradient(circle at 47% 44%, #394039 0 7%, transparent 35%),
@@ -51,7 +253,7 @@
 }
 
 #experience[data-chapter='0'] .scroll-cue {
-  color: rgb(174 205 177 / 72%);
+  color: var(--color-primary);
 }
 
 .backdrop__motifs {
@@ -405,7 +607,7 @@
   top: 13%;
   right: 5%;
   color: rgb(208 126 255 / 34%);
-  font-size: clamp(1rem, 2.4vw, 2.5rem);
+  font-size: clamp(0.75rem, 1.7vw, 1.7rem);
   font-weight: 900;
   line-height: 0.82;
   letter-spacing: -0.06em;

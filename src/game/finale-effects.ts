@@ -1,140 +1,35 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import type { HeadMesh } from './state';
-import { getVector4Uniform } from './renderer';
+import { skullVertexShader, skullFragmentShader } from './shaders';
 
-export const createMouthRig = (headGeometry: THREE.BufferGeometry) => {
-  headGeometry.computeBoundingBox();
-  const bounds = headGeometry.boundingBox;
-  if (!bounds) throw new Error('Unable to calculate head geometry bounds.');
-  const positions = headGeometry.getAttribute('position');
-  const faceWidth = bounds.max.x - bounds.min.x;
-  let frontZ = -Infinity;
-  let mouthX = 0;
-  let mouthSamples = 0;
-  for (let index = 0; index < positions.count; index += 1) {
-    const x = positions.getX(index);
-    const y = positions.getY(index);
-    const z = positions.getZ(index);
-    if (y > -0.66 && y < -0.34 && Math.abs(x) < faceWidth * 0.28 && z > 0) {
-      frontZ = Math.max(frontZ, z);
-      mouthX += x;
-      mouthSamples += 1;
-    }
-  }
-  if (!Number.isFinite(frontZ)) frontZ = bounds.max.z * 0.72;
-  mouthX = mouthSamples ? mouthX / mouthSamples : 0;
-  const group = new THREE.Group();
-  group.position.set(mouthX, -0.5, frontZ - 0.055);
-  group.scale.x = faceWidth * 0.4;
-  group.visible = false;
-
-  const cavityMaterial = new THREE.MeshBasicMaterial({
-    color: 0x030303,
-    transparent: true,
-    opacity: 0,
-    depthWrite: false,
-  });
-  const cavity = new THREE.Mesh(
-    new THREE.CircleGeometry(0.5, 24),
-    cavityMaterial,
-  );
-  cavity.scale.set(1, 0.27, 1);
-  group.add(cavity);
-
-  const toothMaterial = new THREE.MeshBasicMaterial({
-    color: 0xd8d5b7,
-    transparent: true,
-    opacity: 0,
-  });
-  const gumMaterial = new THREE.MeshBasicMaterial({
-    color: 0x32131d,
-    transparent: true,
-    opacity: 0,
-  });
-  const upper = new THREE.Group();
-  const lower = new THREE.Group();
-  const toothGeometry = new THREE.BoxGeometry(0.105, 0.16, 0.075, 1, 1, 1);
-  const gumGeometry = new THREE.BoxGeometry(0.92, 0.075, 0.055);
-  const upperGum = new THREE.Mesh(gumGeometry, gumMaterial);
-  const lowerGum = new THREE.Mesh(gumGeometry, gumMaterial);
-  upperGum.position.y = 0.075;
-  lowerGum.position.y = -0.075;
-  upper.add(upperGum);
-  lower.add(lowerGum);
-
-  for (let index = 0; index < 9; index += 1) {
-    const normalized = index / 8 - 0.5;
-    const x = normalized * 0.82;
-    const curve = normalized * normalized;
-    const widthScale = 1 - Math.abs(normalized) * 0.34;
-    const upperTooth = new THREE.Mesh(toothGeometry, toothMaterial);
-    upperTooth.position.set(x, 0.005 - curve * 0.065, 0.015 - curve * 0.08);
-    upperTooth.scale.set(widthScale, 0.9 + (1 - Math.abs(normalized)) * 0.2, 1);
-    upperTooth.rotation.z = normalized * -0.08;
-    upper.add(upperTooth);
-    const lowerTooth = upperTooth.clone();
-    lowerTooth.position.y = -0.005 + curve * 0.055;
-    lowerTooth.rotation.z *= -1;
-    lower.add(lowerTooth);
-  }
-  upper.position.y = 0.015;
-  lower.position.y = -0.02;
-  group.add(upper, lower);
-
-  let opacity = 0;
-  let allowed = false;
-  const update = (expression: THREE.Vector4, detail: THREE.Vector4) => {
-    const jaw = THREE.MathUtils.clamp(expression.w, 0, 1);
-    const gape = THREE.MathUtils.clamp(detail.w, 0, 1);
-    const reveal = THREE.MathUtils.smoothstep(
-      jaw * 0.58 + gape * 0.72,
-      0.16,
-      0.58,
-    );
-    group.visible = allowed && opacity > 0.01 && reveal > 0.01;
-    if (!group.visible) return;
-    cavity.scale.y = 0.18 + gape * 0.34 + jaw * 0.18;
-    upper.position.y = 0.025 + gape * 0.055;
-    lower.position.y = -0.025 - gape * 0.11 - jaw * 0.13;
-    lower.rotation.z = expression.z * 0.035;
-    const visibleOpacity = opacity * reveal;
-    cavityMaterial.opacity = visibleOpacity * 0.96;
-    toothMaterial.opacity = visibleOpacity;
-    gumMaterial.opacity = visibleOpacity * 0.92;
-  };
-
-  return {
-    group,
-    update,
-    setOpacity: (value: number) => {
-      opacity = value;
+const createSkullMaterial = (shadow = 0) =>
+  new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uWarp: { value: 0.055 },
+      uHeat: { value: 0 },
+      uGlitch: { value: 0 },
+      uGlitchSeed: { value: 0 },
+      uFinalMorph: { value: 0 },
+      uTear: { value: 0 },
+      uTexture: { value: null as THREE.Texture | null },
+      uKeyDirection: { value: new THREE.Vector3(-0.42, 0.62, 0.86) },
+      uKeyIntensity: { value: 1.34 },
+      uFillIntensity: { value: 0.46 },
+      uRimIntensity: { value: 0.82 },
+      uSpecular: { value: 0.7 },
+      uOpacity: { value: 1 },
+      uShadow: { value: shadow },
     },
-    setAllowed: (value: boolean) => {
-      allowed = value;
-      if (!value) group.visible = false;
-    },
-    dispose: () => {
-      cavity.geometry.dispose();
-      cavityMaterial.dispose();
-      toothGeometry.dispose();
-      gumGeometry.dispose();
-      toothMaterial.dispose();
-      gumMaterial.dispose();
-    },
-  };
-};
+    vertexShader: skullVertexShader,
+    fragmentShader: skullFragmentShader,
+    side: THREE.DoubleSide,
+    transparent: true,
+  });
 
 export const createProceduralSkull = () => {
   const group = new THREE.Group();
-  const bone = new THREE.MeshBasicMaterial({
-    color: 0xd9d1a8,
-    toneMapped: false,
-  });
-  const shadow = new THREE.MeshBasicMaterial({
-    color: 0x090307,
-    toneMapped: false,
-  });
+  const bone = createSkullMaterial(0);
+  const shadow = createSkullMaterial(1);
   const add = (
     geometry: THREE.BufferGeometry,
     material: THREE.Material,
@@ -194,13 +89,30 @@ export const createProceduralSkull = () => {
   const jaw = new THREE.Group();
   jaw.position.y = -0.48;
   group.add(jaw);
-  add(
-    new THREE.BoxGeometry(1.16, 0.42, 0.44, 4, 2, 1),
+  const chin = add(
+    new THREE.TorusGeometry(0.48, 0.115, 3, 7, Math.PI),
     bone,
-    [0, -0.36, 0.25],
+    [0, -0.4, 0.36],
+    [1.2, 0.82, 0.88],
+    jaw,
+  );
+  chin.rotation.z = Math.PI;
+  const leftRamus = add(
+    new THREE.BoxGeometry(0.18, 0.72, 0.22),
+    bone,
+    [-0.52, -0.12, 0.28],
     [1, 1, 1],
     jaw,
   );
+  const rightRamus = add(
+    new THREE.BoxGeometry(0.18, 0.72, 0.22),
+    bone,
+    [0.52, -0.12, 0.28],
+    [1, 1, 1],
+    jaw,
+  );
+  leftRamus.rotation.z = -0.18;
+  rightRamus.rotation.z = 0.18;
   const toothGeometry = new THREE.BoxGeometry(0.115, 0.22, 0.12);
   for (let index = 0; index < 9; index += 1) {
     const x = (index - 4) * 0.125;
@@ -221,49 +133,21 @@ export const createProceduralSkull = () => {
     );
     lower.rotation.z = (index - 4) * 0.025;
   }
-  group.userData.jaw = jaw;
   group.userData.materials = [bone, shadow];
+  group.scale.setScalar(0.72);
   group.visible = false;
   return group;
 };
 
-export const loadExternalSkull = async () => {
-  const gltf = await new GLTFLoader().loadAsync('/models/low-poly-skull.glb');
-  const group = gltf.scene;
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xff7fa3,
-    toneMapped: false,
-  });
-  group.traverse((child) => {
-    if (!(child instanceof THREE.Mesh)) return;
-    child.material = material;
-    child.frustumCulled = false;
-  });
-  group.updateMatrixWorld(true);
-  const bounds = new THREE.Box3().setFromObject(group);
-  const size = new THREE.Vector3();
-  const center = new THREE.Vector3();
-  bounds.getSize(size);
-  bounds.getCenter(center);
-  const fitted = new THREE.Group();
-  fitted.add(group);
-  const scale = 3.2 / Math.max(size.y, 0.001);
-  group.position.copy(center).multiplyScalar(-1);
-  fitted.scale.setScalar(scale);
-  fitted.rotation.y = Math.PI;
-  fitted.userData.materials = [material];
-  fitted.visible = false;
-  return fitted;
-};
-
 export const createFinalSceneEffects = (
-  modelGroup: THREE.Group,
+  effectsGroup: THREE.Group,
+  contentPivot: THREE.Group,
   headVariants: THREE.Object3D[],
-  headMesh: HeadMesh,
   root: HTMLElement,
 ) => {
   const maxFragments = 300;
   const maxDrops = 80;
+  const maxSnow = 220;
   const dummy = new THREE.Object3D();
   const fragmentGeometry = new THREE.BoxGeometry(0.075, 0.075, 0.075);
   const fragmentMaterial = new THREE.MeshBasicMaterial({ color: 0x8446a8 });
@@ -275,7 +159,7 @@ export const createFinalSceneEffects = (
   fragments.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   fragments.visible = false;
   fragments.frustumCulled = false;
-  modelGroup.add(fragments);
+  contentPivot.add(fragments);
 
   const dropGeometry = new THREE.LatheGeometry(
     [
@@ -298,14 +182,53 @@ export const createFinalSceneEffects = (
   rain.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   rain.visible = false;
   rain.frustumCulled = false;
-  modelGroup.add(rain);
+  effectsGroup.add(rain);
+
+  const snowGeometry = new THREE.SphereGeometry(0.042, 6, 4);
+  const snowMaterial = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      varying vec3 vSnowLocal;
+      varying vec3 vSnowNormal;
+      varying vec3 vSnowWorld;
+      void main() {
+        vec4 instancePosition = instanceMatrix * vec4(position, 1.0);
+        vec4 worldPosition = modelMatrix * instancePosition;
+        vSnowLocal = position;
+        vSnowNormal = normalize(normalMatrix * mat3(instanceMatrix) * normal);
+        vSnowWorld = worldPosition.xyz;
+        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      varying vec3 vSnowLocal;
+      varying vec3 vSnowNormal;
+      varying vec3 vSnowWorld;
+      void main() {
+        float edge = pow(1.0 - abs(vSnowNormal.z), 1.7);
+        float checker = mod(floor((vSnowLocal.x + 0.2) * 44.0) + floor((vSnowLocal.y + 0.2) * 44.0), 2.0);
+        float flashWave = sin(uTime * 7.5 + vSnowWorld.x * 3.1 + vSnowWorld.y * 1.7);
+        float flash = smoothstep(0.72, 0.98, flashWave);
+        vec3 black = mix(vec3(0.006, 0.005, 0.009), vec3(0.34, 0.28, 0.4), edge * 0.78);
+        vec3 checked = mix(vec3(0.015), vec3(0.92), checker);
+        vec3 color = mix(black, checked, flash * 0.88);
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+  });
+  const snow = new THREE.InstancedMesh(snowGeometry, snowMaterial, maxSnow);
+  snow.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  snow.visible = false;
+  snow.frustumCulled = false;
+  effectsGroup.add(snow);
 
   let origins: THREE.Vector3[] = [];
   const collectOrigins = (variant: THREE.Object3D) => {
     const candidates: THREE.Vector3[] = [];
-    modelGroup.updateMatrixWorld(true);
+    contentPivot.updateMatrixWorld(true);
     const inverseModel = new THREE.Matrix4()
-      .copy(modelGroup.matrixWorld)
+      .copy(contentPivot.matrixWorld)
       .invert();
     variant.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return;
@@ -346,49 +269,16 @@ export const createFinalSceneEffects = (
     scale: 1,
     tilt: 0,
   }));
-  const expressionClips = [
-    {
-      face: new THREE.Vector4(0.18, 0.12, 0, 0.05),
-      detail: new THREE.Vector4(0, 0, 0, 0.06),
-    },
-    {
-      face: new THREE.Vector4(0.92, -0.42, -0.34, 0.12),
-      detail: new THREE.Vector4(0.18, -0.12, 0, 0.18),
-    },
-    {
-      face: new THREE.Vector4(-0.38, 0.78, 0.68, 0.2),
-      detail: new THREE.Vector4(0.24, 0.18, 0, 0.3),
-    },
-    {
-      face: new THREE.Vector4(-0.7, -0.58, -0.12, 0.32),
-      detail: new THREE.Vector4(0.72, -0.18, 0, 0.5),
-    },
-    {
-      face: new THREE.Vector4(0.42, 0.36, 0.22, 0.9),
-      detail: new THREE.Vector4(0.08, 0.04, 0, 0.96),
-    },
-    {
-      face: new THREE.Vector4(-0.82, 0.62, -0.74, 0.52),
-      detail: new THREE.Vector4(0.38, 0.32, 0, 0.68),
-    },
-    {
-      face: new THREE.Vector4(0.66, 0.7, 0.08, 0.38),
-      detail: new THREE.Vector4(0.92, -0.22, 0, 0.62),
-    },
-    {
-      face: new THREE.Vector4(-0.3, -0.18, 0.5, 0.68),
-      detail: new THREE.Vector4(-0.18, 0.56, 0, 0.74),
-    },
-  ];
-  const expression = getVector4Uniform(headMesh.material, 'uExpression');
-  const expressionDetail = getVector4Uniform(
-    headMesh.material,
-    'uExpressionDetail',
-  );
-  const expressionBase = new THREE.Vector4();
-  const detailBase = new THREE.Vector4();
-  const expressionTarget = new THREE.Vector4();
-  const detailTarget = new THREE.Vector4();
+  const snowflakes = Array.from({ length: maxSnow }, () => ({
+    position: new THREE.Vector3(),
+    baseX: 0,
+    speed: 0,
+    scale: 1,
+    sway: 0,
+    swayRate: 0,
+    phase: 0,
+    spin: 0,
+  }));
   let active = false;
   let reducedMotion = false;
   let sceneTime = 0;
@@ -396,20 +286,23 @@ export const createFinalSceneEffects = (
   let explosionAt = Infinity;
   let phaseEndsAt = Infinity;
   let phaseStartedAt = 0;
-  let expressionAt = 0;
   let activeVariantIndex = 0;
   let nextHeadSwitchAt = 0;
+  let switchesRemaining = 0;
+  let nextTearAt = Infinity;
+  let tearStartedAt = -1;
+  let morphIntensity = 0;
+  let tearIntensity = 0;
   let ambientAt = Infinity;
   let ambientEndsAt = Infinity;
   let ambientType = 'none';
-  let blinkAt = 0;
-  let blinkStartedAt = -1;
-  let lastExpressionIndex = -1;
   let phase = 'calm';
   let fragmentCount = maxFragments;
   let dropCount = maxDrops;
+  let snowCount = maxSnow;
   let glitchBoost = 0;
   let rainAccumulator = 0;
+  let snowAccumulator = 0;
   let fragmentAccumulator = 0;
   const RAIN_STEP = 0.1;
   const FRAGMENT_STEP = 1 / 12;
@@ -421,18 +314,24 @@ export const createFinalSceneEffects = (
     root.dataset.headVariant = String(activeVariantIndex);
   };
 
-  const scheduleHeadSwitch = () => {
-    nextHeadSwitchAt = sceneTime + 1.4 + Math.random() * 1.8;
+  const scheduleHeadBurst = (initial = false) => {
+    switchesRemaining = 0;
+    nextHeadSwitchAt =
+      sceneTime +
+      (initial ? 1.2 + Math.random() * 1.4 : 2.8 + Math.random() * 2.4);
   };
   const switchHead = () => {
-    let next = Math.floor(Math.random() * headVariants.length);
-    if (next === activeVariantIndex) next = (next + 1) % headVariants.length;
-    activeVariantIndex = next;
+    if (switchesRemaining <= 0)
+      switchesRemaining = 5 + Math.floor(Math.random() * 2) * 2;
+    activeVariantIndex = (activeVariantIndex + 1) % headVariants.length;
     showActiveHead();
     root.classList.remove('is-head-switching');
     void root.offsetWidth;
     root.classList.add('is-head-switching');
-    scheduleHeadSwitch();
+    switchesRemaining -= 1;
+    if (switchesRemaining > 0)
+      nextHeadSwitchAt = sceneTime + 0.08 + Math.random() * 0.1;
+    else scheduleHeadBurst();
   };
 
   const resetDrop = (drop: (typeof drops)[number], initial = false) => {
@@ -446,73 +345,87 @@ export const createFinalSceneEffects = (
     drop.tilt = -0.28 + Math.random() * 0.34;
   };
   drops.forEach((drop) => resetDrop(drop, true));
+  const resetSnow = (flake: (typeof snowflakes)[number], initial = false) => {
+    flake.position.set(
+      (Math.random() - 0.5) * 6.2,
+      initial ? -2.8 + Math.random() * 7.2 : 3.4 + Math.random() * 2.8,
+      (Math.random() - 0.5) * 2.8,
+    );
+    flake.baseX = flake.position.x;
+    flake.speed = 0.8 + Math.random() * 2.1;
+    flake.scale = 0.45 + Math.random() * 1.5;
+    flake.sway = 0.16 + Math.random() * 0.42;
+    flake.swayRate = 0.75 + Math.random() * 1.4;
+    flake.phase = Math.random() * Math.PI * 2;
+    flake.spin = (Math.random() - 0.5) * 2.6;
+  };
+  snowflakes.forEach((flake) => resetSnow(flake, true));
 
   const resetState = () => {
     sceneTime = 0;
     rainEndsAt = Infinity;
-    explosionAt = 10 + Math.random() * 6;
-    ambientAt = 1.5 + Math.random() * 2;
+    explosionAt = 5 + Math.random() * 4;
+    ambientAt = 1 + Math.random() * 1.5;
     ambientEndsAt = Infinity;
     ambientType = 'none';
     phaseEndsAt = Infinity;
     phaseStartedAt = 0;
-    expressionAt = 0;
-    blinkAt = 1.2 + Math.random() * 1.8;
-    blinkStartedAt = -1;
-    lastExpressionIndex = -1;
+    nextTearAt = 8 + Math.random() * 6;
+    tearStartedAt = -1;
+    morphIntensity = 0;
+    tearIntensity = 0;
     phase = 'calm';
     rainAccumulator = 0;
+    snowAccumulator = 0;
     fragmentAccumulator = 0;
     rain.visible = false;
-    root.classList.remove('is-final-splattering');
+    snow.visible = false;
     fragments.visible = false;
     activeVariantIndex = Math.floor(Math.random() * headVariants.length);
     showActiveHead();
-    scheduleHeadSwitch();
-    expression.set(0, 0, 0, 0);
-    expressionDetail.set(0, 0, 0, 0);
-    expressionBase.set(0, 0, 0, 0);
-    detailBase.set(0, 0, 0, 0);
-    expressionTarget.set(0, 0, 0, 0);
-    detailTarget.set(0, 0, 0, 0);
+    scheduleHeadBurst(true);
     fragmentState.forEach((piece, index) => {
       piece.position.copy(origins[index]);
       piece.rotation.set(0, 0, 0);
     });
   };
   const startRain = () => {
+    snow.visible = false;
     ambientType = 'rain';
     rain.visible = true;
-    rainEndsAt = sceneTime + 1.5 + Math.random() * 1.5;
+    rainEndsAt = sceneTime + 2.2 + Math.random() * 2;
     ambientEndsAt = rainEndsAt;
     rainAccumulator = RAIN_STEP;
   };
   const stopRain = (scheduleNext = true) => {
     rain.visible = false;
     rainEndsAt = Infinity;
-    if (scheduleNext) ambientAt = sceneTime + 4 + Math.random() * 5;
+    if (scheduleNext) ambientAt = sceneTime + 0.8 + Math.random() * 1.4;
   };
-  const startSplatter = () => {
-    ambientType = 'splatter';
-    ambientEndsAt = sceneTime + 1.8 + Math.random() * 1.4;
-    root.classList.add('is-final-splattering');
+  const startSnow = () => {
+    rain.visible = false;
+    rainEndsAt = Infinity;
+    ambientType = 'snow';
+    snow.visible = true;
+    ambientEndsAt = sceneTime + 2.8 + Math.random() * 2.2;
+    snowAccumulator = RAIN_STEP;
   };
   const stopAmbient = () => {
     stopRain(false);
-    root.classList.remove('is-final-splattering');
+    snow.visible = false;
     ambientType = 'none';
     ambientEndsAt = Infinity;
-    ambientAt = sceneTime + 4 + Math.random() * 5;
+    ambientAt = sceneTime + 0.8 + Math.random() * 1.4;
   };
   const startAmbient = () => {
-    if (Math.random() < 0.5) startRain();
-    else startSplatter();
+    if (Math.random() < 0.64) startRain();
+    else startSnow();
   };
   const explode = () => {
     stopAmbient();
     phase = 'burst';
     phaseStartedAt = sceneTime;
-    phaseEndsAt = sceneTime + 0.45 + Math.random() * 0.2;
+    phaseEndsAt = sceneTime + 0.28 + Math.random() * 0.75;
     fragments.visible = true;
     origins = collectOrigins(headVariants[activeVariantIndex]);
     fragmentState.forEach((piece, index) =>
@@ -543,19 +456,20 @@ export const createFinalSceneEffects = (
     if (active && !reducedMotion) resetState();
     else {
       rain.visible = false;
+      snow.visible = false;
       fragments.visible = false;
       headVariants.forEach((variant, index) => {
         variant.visible = index === 0;
       });
-      expression.set(0, 0, 0, 0);
-      expressionDetail.set(0, 0, 0, 0);
       glitchBoost = 0;
+      morphIntensity = 0;
+      tearIntensity = 0;
       root.style.removeProperty('--final-chaos');
     }
     if (!active || reducedMotion)
       root.classList.remove(
         'is-final-raining',
-        'is-final-splattering',
+        'is-final-snowing',
         'is-final-exploding',
         'is-final-reassembling',
         'is-head-switching',
@@ -569,47 +483,29 @@ export const createFinalSceneEffects = (
     const mobile = window.innerWidth < 720;
     fragmentCount = mobile ? 160 : maxFragments;
     dropCount = mobile ? 44 : maxDrops;
+    snowCount = mobile ? 120 : maxSnow;
     fragments.count = fragmentCount;
     rain.count = dropCount;
+    snow.count = snowCount;
   };
   const update = (delta: number) => {
     if (!active || reducedMotion) return 0;
     const safeDelta = Math.min(delta, 0.25);
     sceneTime += safeDelta;
-    if (sceneTime >= expressionAt) {
-      let nextExpressionIndex = Math.floor(
-        Math.random() * expressionClips.length,
-      );
-      if (nextExpressionIndex === lastExpressionIndex)
-        nextExpressionIndex =
-          (nextExpressionIndex + 1) % expressionClips.length;
-      lastExpressionIndex = nextExpressionIndex;
-      expressionTarget.copy(expressionClips[nextExpressionIndex].face);
-      detailTarget.copy(expressionClips[nextExpressionIndex].detail);
-      expressionAt = sceneTime + 0.9 + Math.random() * 1.9;
+    morphIntensity =
+      0.62 +
+      Math.sin(sceneTime * 1.45) * 0.16 +
+      Math.sin(sceneTime * 3.7) * 0.08;
+    if (tearStartedAt < 0 && phase === 'calm' && sceneTime >= nextTearAt)
+      tearStartedAt = sceneTime;
+    if (tearStartedAt >= 0) {
+      const tearProgress = (sceneTime - tearStartedAt) / 0.42;
+      tearIntensity = tearProgress < 1 ? Math.sin(tearProgress * Math.PI) : 0;
+      if (tearProgress >= 1) {
+        tearStartedAt = -1;
+        nextTearAt = sceneTime + 8 + Math.random() * 6;
+      }
     }
-    const expressionBlend = 1 - Math.exp(-safeDelta * 4.6);
-    expressionBase.lerp(expressionTarget, expressionBlend);
-    detailBase.lerp(detailTarget, expressionBlend);
-    if (blinkStartedAt < 0 && sceneTime >= blinkAt) blinkStartedAt = sceneTime;
-    let blink = 0;
-    if (blinkStartedAt >= 0) {
-      const blinkProgress = (sceneTime - blinkStartedAt) / 0.18;
-      if (blinkProgress >= 1) {
-        blinkStartedAt = -1;
-        blinkAt = sceneTime + 2.1 + Math.random() * 3.8;
-      } else blink = Math.sin(blinkProgress * Math.PI);
-    }
-    expression.copy(expressionBase);
-    expression.x += Math.sin(sceneTime * 1.7) * 0.055;
-    expression.y += Math.sin(sceneTime * 1.31 + 1.8) * 0.045;
-    expression.z += Math.sin(sceneTime * 2.2 + 0.7) * 0.035;
-    expressionDetail.copy(detailBase);
-    expressionDetail.z = Math.max(expressionDetail.z, blink);
-    const proceduralJaw: unknown = headVariants[1]?.userData.jaw;
-    if (proceduralJaw instanceof THREE.Object3D)
-      proceduralJaw.rotation.x =
-        -0.12 - Math.max(expression.w, expressionDetail.w) * 0.28;
     if (phase === 'calm' && sceneTime >= nextHeadSwitchAt) switchHead();
     if (phase === 'calm' && sceneTime >= explosionAt) explode();
     else if (
@@ -641,6 +537,35 @@ export const createFinalSceneEffects = (
         );
       }
     }
+    if (snow.visible) {
+      snowMaterial.uniforms.uTime.value = sceneTime;
+      snowAccumulator = Math.min(snowAccumulator + safeDelta, RAIN_STEP * 2);
+      while (snowAccumulator >= RAIN_STEP) {
+        snowAccumulator -= RAIN_STEP;
+        for (let index = 0; index < snowCount; index += 1) {
+          const flake = snowflakes[index];
+          flake.position.y -= flake.speed * RAIN_STEP;
+          flake.position.x =
+            flake.baseX +
+            Math.sin(sceneTime * flake.swayRate + flake.phase) * flake.sway;
+          if (flake.position.y < -2.8) resetSnow(flake);
+          dummy.position.copy(flake.position);
+          dummy.rotation.set(
+            sceneTime * flake.spin + index,
+            sceneTime * flake.spin * 0.7,
+            index * 0.31,
+          );
+          dummy.scale.setScalar(flake.scale);
+          dummy.updateMatrix();
+          snow.setMatrixAt(index, dummy.matrix);
+        }
+        snow.instanceMatrix.needsUpdate = true;
+        root.style.setProperty(
+          '--final-chaos',
+          String(0.48 + Math.random() * 0.24),
+        );
+      }
+    }
     fragmentAccumulator = Math.min(
       fragmentAccumulator + safeDelta,
       FRAGMENT_STEP * 2,
@@ -648,11 +573,11 @@ export const createFinalSceneEffects = (
     if (phase === 'burst' && sceneTime >= phaseEndsAt) {
       phase = 'hold';
       phaseStartedAt = sceneTime;
-      phaseEndsAt = sceneTime + 0.25 + Math.random() * 0.15;
+      phaseEndsAt = sceneTime + 0.12 + Math.random() * 0.43;
     } else if (phase === 'hold' && sceneTime >= phaseEndsAt) {
       phase = 'reassemble';
       phaseStartedAt = sceneTime;
-      phaseEndsAt = sceneTime + 0.5 + Math.random() * 0.15;
+      phaseEndsAt = sceneTime + 0.3 + Math.random() * 0.9;
       fragmentState.forEach((piece) =>
         piece.reassembleFrom.copy(piece.position),
       );
@@ -700,9 +625,9 @@ export const createFinalSceneEffects = (
         fragments.visible = false;
         showActiveHead();
         phase = 'calm';
-        scheduleHeadSwitch();
-        ambientAt = sceneTime + 4 + Math.random() * 5;
-        explosionAt = sceneTime + 14 + Math.random() * 8;
+        scheduleHeadBurst(true);
+        ambientAt = sceneTime + 0.6 + Math.random() * 1.2;
+        explosionAt = sceneTime + 6 + Math.random() * 5;
       }
     }
     glitchBoost =
@@ -712,10 +637,11 @@ export const createFinalSceneEffects = (
           ? 0.78
           : phase === 'reassemble'
             ? 1.05
-            : rain.visible || ambientType === 'splatter'
+            : rain.visible || snow.visible
               ? 0.5
-              : 0.16;
+              : 0.16 + tearIntensity * 0.9;
     root.classList.toggle('is-final-raining', rain.visible);
+    root.classList.toggle('is-final-snowing', snow.visible);
     root.classList.toggle(
       'is-final-exploding',
       phase === 'burst' || phase === 'hold',
@@ -737,12 +663,17 @@ export const createFinalSceneEffects = (
     },
     isFragmented: () => fragments.visible,
     isActive: () => active,
+    canShowcase: () => (active ? phase === 'calm' : true),
+    getMorphState: () => ({
+      intensity: active && !reducedMotion ? morphIntensity : 0,
+      tear: active && !reducedMotion ? tearIntensity : 0,
+    }),
     getActiveVariant: () => activeVariantIndex,
     dispose: () => {
       root.classList.remove(
         'is-final-sequence',
         'is-final-raining',
-        'is-final-splattering',
+        'is-final-snowing',
         'is-final-exploding',
         'is-final-reassembling',
         'is-head-switching',
@@ -752,6 +683,8 @@ export const createFinalSceneEffects = (
       fragmentMaterial.dispose();
       dropGeometry.dispose();
       dropMaterial.dispose();
+      snowGeometry.dispose();
+      snowMaterial.dispose();
     },
   };
 };

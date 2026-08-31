@@ -77,7 +77,8 @@
   transition-duration: 90ms;
 }
 
-#experience.is-final-raining .analog-overlay__tear {
+#experience.is-final-raining .analog-overlay__tear,
+#experience.is-final-snowing .analog-overlay__tear {
   opacity: calc(0.42 + var(--final-chaos, 0) * 0.34);
   animation-duration: 1.7s;
 }

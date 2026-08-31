@@ -81,7 +81,7 @@ const trimHeadAtJaw = (geometry: THREE.BufferGeometry) => {
       const y = position.getY(vertex);
       const z = position.getZ(vertex);
       const cutoff =
-        -1.12 +
+        -0.94 +
         Math.sin(x * 10.7 + Math.sin(z * 8.3) * 1.8) * 0.052 +
         Math.sin(z * 15.1 - x * 4.6) * 0.026;
       if (y < cutoff) keep = false;

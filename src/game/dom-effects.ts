@@ -57,6 +57,153 @@ export const createTextFlicker = (chapters: HTMLElement[]) =>
     return timeline;
   });
 
+export const createTitleMutations = (chapters: HTMLElement[]) => {
+  const glyphs = [
+    '⌁',
+    '⟁',
+    '⊗',
+    '⧖',
+    '⟡',
+    'Ж',
+    'Ȣ',
+    'ϟ',
+    '∆',
+    '░',
+    '▓',
+    '※',
+    '⸸',
+  ];
+  const titles = chapters
+    .map((chapter) => chapter.querySelector<HTMLElement>('h2'))
+    .filter((title): title is HTMLElement => title !== null);
+  const releaseTimers = new Set<number>();
+  let delayedCall: ReturnType<typeof gsap.delayedCall> | undefined;
+  let reducedMotion = false;
+  let destroyed = false;
+
+  titles.forEach((title) => {
+    const lines = [''];
+    Array.from(title.childNodes).forEach((node) => {
+      if (node.nodeType === Node.ELEMENT_NODE && node.nodeName === 'BR')
+        lines.push('');
+      else lines[lines.length - 1] += node.textContent || '';
+    });
+    title.setAttribute('aria-label', lines.join(' '));
+    title.textContent = '';
+    const visual = document.createElement('span');
+    visual.className = 'title-visual';
+    visual.setAttribute('aria-hidden', 'true');
+    lines.forEach((line) => {
+      const lineElement = document.createElement('span');
+      lineElement.className = 'title-line';
+      Array.from(line).forEach((character) => {
+        const span = document.createElement('span');
+        span.className = character === ' ' ? 'title-space' : 'title-char';
+        if (character !== ' ') span.dataset.original = character.toLowerCase();
+        span.textContent =
+          character === ' ' ? '\u00a0' : character.toLowerCase();
+        lineElement.append(span);
+      });
+      visual.append(lineElement);
+    });
+    title.append(visual);
+  });
+
+  const restore = () => {
+    releaseTimers.forEach((timer) => window.clearTimeout(timer));
+    releaseTimers.clear();
+    titles.forEach((title) => {
+      title.classList.remove('is-title-italic');
+      title
+        .querySelectorAll<HTMLElement>('.title-char')
+        .forEach((character) => {
+          const original = character.dataset.original || '';
+          character.textContent = original === ' ' ? '\u00a0' : original;
+          character.classList.remove('is-title-char-italic');
+        });
+    });
+  };
+
+  const schedule = () => {
+    if (destroyed || reducedMotion) return;
+    const activeChapter = chapters.find((chapter) =>
+      chapter.classList.contains('is-active'),
+    );
+    const stage = Number(activeChapter?.dataset.index || 0);
+    const waits: Record<number, [number, number]> = {
+      1: [2.4, 2.2],
+      2: [1.15, 1.55],
+      3: [3.1, 2.3],
+    };
+    const [base, spread] = waits[stage] || [1.2, 0.8];
+    delayedCall = gsap.delayedCall(base + Math.random() * spread, mutate);
+  };
+
+  const mutate = () => {
+    if (destroyed || reducedMotion) return;
+    const title = titles.find((candidate) =>
+      candidate
+        .closest<HTMLElement>('.chapter')
+        ?.classList.contains('is-active'),
+    );
+    if (!title) {
+      schedule();
+      return;
+    }
+    restore();
+    const stage = Number(
+      title.closest<HTMLElement>('.chapter')?.dataset.index || 1,
+    );
+    const characters = Array.from(
+      title.querySelectorAll<HTMLElement>('.title-char'),
+    ).filter((character) => /[A-Z]/i.test(character.dataset.original || ''));
+    const count = Math.min(
+      characters.length,
+      1 + Math.floor(Math.random() * (stage === 2 ? 3 : 2)),
+    );
+    const selected = [...characters]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count);
+    const symbolChance = stage === 2 ? 0.72 : stage === 3 ? 0.52 : 0.34;
+    selected.forEach((character) => {
+      const original = character.dataset.original || '';
+      if (Math.random() < symbolChance)
+        character.textContent =
+          glyphs[Math.floor(Math.random() * glyphs.length)];
+      else character.textContent = original.toUpperCase();
+      character.classList.toggle('is-title-char-italic', Math.random() < 0.62);
+    });
+    title.classList.toggle(
+      'is-title-italic',
+      Math.random() < (stage === 3 ? 0.58 : 0.3),
+    );
+    const timer = window.setTimeout(
+      () => {
+        releaseTimers.delete(timer);
+        restore();
+        schedule();
+      },
+      70 + Math.random() * 90,
+    );
+    releaseTimers.add(timer);
+  };
+
+  schedule();
+  return {
+    setReducedMotion: (active: boolean) => {
+      reducedMotion = active;
+      delayedCall?.kill();
+      restore();
+      if (!active) schedule();
+    },
+    destroy: () => {
+      destroyed = true;
+      delayedCall?.kill();
+      restore();
+    },
+  };
+};
+
 export const createSceneStutter = (root: HTMLElement) => {
   let reducedMotion = false;
   let delayedCall: ReturnType<typeof gsap.delayedCall> | undefined;
@@ -107,7 +254,7 @@ export const createShopReveal = (link: HTMLAnchorElement | null) => {
   const activate = () => {
     reset();
     if (reducedMotion) reveal();
-    else timer = window.setTimeout(reveal, 1900);
+    else timer = window.setTimeout(reveal, 600);
   };
   const onAnimationEnd = (event: AnimationEvent) => {
     if (event.animationName !== 'shop-signal-lock') return;

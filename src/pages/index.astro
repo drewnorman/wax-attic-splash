@@ -2,7 +2,6 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '⦿'];
-const waxSplats = Array.from({ length: 14 });
 ---
 
 <BaseLayout
@@ -57,13 +56,17 @@ const waxSplats = Array.from({ length: 14 });
       <div class="backdrop__grain"></div>
     </div>
 
+    <div class="paint-atmosphere" aria-hidden="true">
+      <div class="paint-atmosphere__layer paint-atmosphere__layer--rear">
+        <i class="paint-mask paint-mask--dense"></i>
+        <i class="paint-mask paint-mask--scatter"></i>
+        <i class="paint-mask paint-mask--burst"></i>
+      </div>
+    </div>
+
     <canvas id="burnCanvas" aria-hidden="true"></canvas>
     <canvas id="scene" aria-hidden="true"></canvas>
     <canvas id="smokeCanvas" aria-hidden="true"></canvas>
-
-    <div class="wax-splatter-field" aria-hidden="true">
-      {waxSplats.map((_, index) => <i style={`--splat-index:${index}`} />)}
-    </div>
 
     <div class="analog-overlay" aria-hidden="true">
       <canvas id="overlayParticles"></canvas>
@@ -90,6 +93,52 @@ const waxSplats = Array.from({ length: 14 });
     </div>
 
     <div class="story" aria-live="polite">
+      <div class="stage-progress">
+        <p
+          class="stage-indicator burn-reactive"
+          data-burn-target="sigils"
+          aria-hidden="true"
+        >
+          {stageGlyphs.map((glyph) => <span>{glyph}</span>)}
+        </p>
+        <nav
+          class="progress observer-ignore burn-reactive"
+          data-burn-target="progress"
+          aria-label="Story chapters"
+          aria-hidden="true"
+          inert
+        >
+          <span class="progress__reservoir" aria-hidden="true">
+            <span class="progress__fill"
+              ><i class="progress__bubble progress__bubble--a"></i><i
+                class="progress__bubble progress__bubble--b"></i></span
+            >
+            <span class="progress__meniscus"></span>
+          </span>
+          <button
+            class="progress__mark is-active"
+            type="button"
+            data-target="0"
+            aria-label="Introduction"
+            aria-current="step"></button>
+          <button
+            class="progress__mark"
+            type="button"
+            data-target="1"
+            aria-label="One of One"></button>
+          <button
+            class="progress__mark"
+            type="button"
+            data-target="2"
+            aria-label="Natural Selection"></button>
+          <button
+            class="progress__mark"
+            type="button"
+            data-target="3"
+            aria-label="Made in a Wax Attic"></button>
+        </nav>
+      </div>
+
       <section
         class="chapter is-active"
         data-index="0"
@@ -108,19 +157,8 @@ const waxSplats = Array.from({ length: 14 });
         aria-hidden="true"
         inert
       >
-        <p
-          class="chapter__sigil-strip burn-reactive"
-          data-burn-target="sigils"
-          aria-hidden="true"
-        >
-          {
-            stageGlyphs.map((glyph, index) => (
-              <span class:list={{ 'is-stage-glyph': index < 3 }}>{glyph}</span>
-            ))
-          }
-        </p>
         <h2 id="chapter-1-title" class="burn-reactive" data-burn-target="title">
-          ONE OF<br />ONE
+          one of one
         </h2>
       </section>
 
@@ -132,27 +170,12 @@ const waxSplats = Array.from({ length: 14 });
         inert
       >
         <div class="chapter__title-block">
-          <p
-            class="chapter__sigil-strip burn-reactive"
-            data-burn-target="sigils"
-            aria-hidden="true"
-          >
-            {
-              stageGlyphs.map((glyph, index) => (
-                <span
-                  class:list={{ 'is-stage-glyph': index >= 3 && index < 6 }}
-                >
-                  {glyph}
-                </span>
-              ))
-            }
-          </p>
           <h2
             id="chapter-2-title"
             class="burn-reactive"
             data-burn-target="title"
           >
-            NATURAL<br />SELECTION
+            natural<br />selection
           </h2>
         </div>
       </section>
@@ -165,25 +188,12 @@ const waxSplats = Array.from({ length: 14 });
         inert
       >
         <div class="chapter__final-copy">
-          <p
-            class="chapter__sigil-strip burn-reactive"
-            data-burn-target="sigils"
-            aria-hidden="true"
-          >
-            {
-              stageGlyphs.map((glyph, index) => (
-                <span class:list={{ 'is-stage-glyph': index >= 6 }}>
-                  {glyph}
-                </span>
-              ))
-            }
-          </p>
           <h2
             id="chapter-3-title"
             class="burn-reactive"
             data-burn-target="title"
           >
-            MADE IN A<br />WAX ATTIC
+            made in a<br />wax attic
           </h2>
         </div>
         <a
@@ -200,43 +210,6 @@ const waxSplats = Array.from({ length: 14 });
         </a>
       </section>
     </div>
-
-    <nav
-      class="progress observer-ignore burn-reactive"
-      data-burn-target="progress"
-      aria-label="Story chapters"
-      aria-hidden="true"
-      inert
-    >
-      <span class="progress__reservoir" aria-hidden="true">
-        <span class="progress__fill"
-          ><i class="progress__bubble progress__bubble--a"></i><i
-            class="progress__bubble progress__bubble--b"></i></span
-        >
-        <span class="progress__meniscus"></span>
-      </span>
-      <button
-        class="progress__mark is-active"
-        type="button"
-        data-target="0"
-        aria-label="Introduction"
-        aria-current="step"></button>
-      <button
-        class="progress__mark"
-        type="button"
-        data-target="1"
-        aria-label="One of One"></button>
-      <button
-        class="progress__mark"
-        type="button"
-        data-target="2"
-        aria-label="Natural Selection"></button>
-      <button
-        class="progress__mark"
-        type="button"
-        data-target="3"
-        aria-label="Made in a Wax Attic"></button>
-    </nav>
 
     <div id="loadingOverlay" aria-live="polite">
       <div class="boot-panel">

@@ -16,30 +16,17 @@ import {
 } from './head-geometry';
 import { createDepthField } from './depth-field';
 import {
-  createMouthRig,
   createProceduralSkull,
-  loadExternalSkull,
   createFinalSceneEffects,
 } from './finale-effects';
 import { createCubeFireEmitter } from './cube-fire';
-
-export const getVector4Uniform = (
-  material: THREE.ShaderMaterial,
-  name: string,
-) => {
-  const value: unknown = material.uniforms[name]?.value;
-  if (!(value instanceof THREE.Vector4)) {
-    throw new Error(`The head shader is missing its ${name} uniform.`);
-  }
-  return value;
-};
 
 const getVariantMaterials = (variant: THREE.Object3D) => {
   const materials: unknown = variant.userData.materials;
   return Array.isArray(materials)
     ? materials.filter(
-        (material): material is THREE.MeshBasicMaterial =>
-          material instanceof THREE.MeshBasicMaterial,
+        (material): material is THREE.ShaderMaterial =>
+          material instanceof THREE.ShaderMaterial,
       )
     : [];
 };
@@ -120,8 +107,8 @@ export const createRenderer = async (
     uGlitch: { value: 0 },
     uGlitchSeed: { value: 0 },
     uOpacity: { value: state.headOpacity },
-    uExpression: { value: new THREE.Vector4() },
-    uExpressionDetail: { value: new THREE.Vector4() },
+    uFinalMorph: { value: 0 },
+    uTear: { value: 0 },
   };
   const headMaterial = new THREE.ShaderMaterial({
     uniforms: headUniforms,
@@ -142,31 +129,30 @@ export const createRenderer = async (
     headGeometry = new THREE.SphereGeometry(1.2, 32, 24);
   }
   const headMesh = new THREE.Mesh(headGeometry, headMaterial);
-  const mouthRig = createMouthRig(headGeometry);
-  headMesh.add(mouthRig.group);
+  headMesh.scale.setScalar(1.18);
+  headMesh.position.y = -0.48;
   const proceduralSkull = createProceduralSkull();
-  let externalSkull;
-  try {
-    externalSkull = await loadExternalSkull();
-  } catch (error) {
-    console.warn(
-      'External skull unavailable; using a second procedural skull treatment.',
-      error,
-    );
-    externalSkull = createProceduralSkull();
-    externalSkull.rotation.y = Math.PI;
-    externalSkull.scale.set(0.94, 1.06, 0.94);
-  }
-  const headVariants = [headMesh, proceduralSkull, externalSkull];
+  const skullVariants = [proceduralSkull];
+  const headVariants = [headMesh, ...skullVariants];
+  skullVariants.forEach((variant) => {
+    variant.userData.idleBasePosition = variant.position.clone();
+    variant.userData.idleBaseRotation = variant.rotation.clone();
+    getVariantMaterials(variant).forEach((material) => {
+      material.uniforms.uTexture.value = fallbackTexture;
+    });
+  });
   const modelGroup = new THREE.Group();
+  const contentPivot = new THREE.Group();
+  const effectsGroup = new THREE.Group();
   modelGroup.rotation.set(-0.18, -0.38, 0.04);
-  modelGroup.add(cubeMesh, ...headVariants);
-  scene.add(modelGroup);
-  const cubeFire = createCubeFireEmitter(modelGroup);
+  contentPivot.add(cubeMesh, ...headVariants);
+  modelGroup.add(contentPivot);
+  scene.add(modelGroup, effectsGroup);
+  const cubeFire = createCubeFireEmitter(contentPivot);
   const finalEffects = createFinalSceneEffects(
-    modelGroup,
+    effectsGroup,
+    contentPivot,
     headVariants,
-    headMesh,
     root,
   );
   const sludgeUniforms = {
@@ -187,6 +173,7 @@ export const createRenderer = async (
   sludgePlane.position.z = -3.5;
   scene.add(sludgePlane);
   const depthField = createDepthField(scene, state);
+  let skullTexture: THREE.Texture | null = null;
   try {
     const texture = await new THREE.TextureLoader().loadAsync(
       '/images/wax-texture.png',
@@ -197,6 +184,13 @@ export const createRenderer = async (
     texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     meshUniforms.uTexture.value = texture;
     headUniforms.uTexture.value = texture;
+    skullTexture = texture.clone();
+    skullTexture.needsUpdate = true;
+    skullVariants.forEach((variant) => {
+      getVariantMaterials(variant).forEach((material) => {
+        material.uniforms.uTexture.value = skullTexture;
+      });
+    });
     depthField.setTexture(texture);
     finalEffects.setTexture(texture);
     fallbackTexture.dispose();
@@ -235,6 +229,14 @@ export const createRenderer = async (
   let glitchSeed = 0;
   let glitchEndsAt = 0;
   let nextGlitchAt = 0;
+  let reducedMotion = false;
+  let nextShowcaseAt = 4 + Math.random() * 4;
+  let showcaseStartedAt = -1;
+  let showcaseDuration = 0;
+  let showcaseAxis = 'y';
+  const showcaseAxisWorld = new THREE.Vector3();
+  const showcaseAxisLocal = new THREE.Vector3();
+  const inverseModelQuaternion = new THREE.Quaternion();
   renderer.setAnimationLoop(() => {
     if (!visible) return;
     timer.update();
@@ -245,7 +247,8 @@ export const createRenderer = async (
     const burnEase =
       1 - Math.exp(-delta * (burnTarget > burnIntensity ? 11 : 2.8));
     burnIntensity = THREE.MathUtils.lerp(burnIntensity, burnTarget, burnEase);
-    const heatEase = 1 - Math.exp(-delta * 10);
+    const heatEase =
+      1 - Math.exp(-delta * (headHeatTarget > headHeat ? 22 : 3.2));
     cubeHeat = THREE.MathUtils.lerp(cubeHeat, cubeHeatTarget, heatEase);
     headHeat = THREE.MathUtils.lerp(headHeat, headHeatTarget, heatEase);
     cubeFire.update(
@@ -302,6 +305,73 @@ export const createRenderer = async (
     meshUniforms.uWarp.value = state.warp + cubeHeat * 0.48;
     meshUniforms.uChaos.value = state.chaos + cubeHeat * 1.15;
     const finalGlitchBoost = finalEffects.update(delta * ambient.timeScale);
+    if (
+      !reducedMotion &&
+      finalEffects.canShowcase() &&
+      showcaseStartedAt < 0 &&
+      time >= nextShowcaseAt
+    ) {
+      showcaseStartedAt = time;
+      showcaseDuration = 0.65 + Math.random() * 0.25;
+      showcaseAxis = Math.random() < 0.5 ? 'x' : 'y';
+    }
+    if (showcaseStartedAt >= 0) {
+      if (!finalEffects.canShowcase() || reducedMotion) {
+        showcaseStartedAt = -1;
+        contentPivot.quaternion.identity();
+        nextShowcaseAt = time + 4 + Math.random() * 4;
+      } else {
+        const progress = THREE.MathUtils.clamp(
+          (time - showcaseStartedAt) / showcaseDuration,
+          0,
+          1,
+        );
+        const eased =
+          progress < 0.5
+            ? 4 * progress * progress * progress
+            : 1 - (-2 * progress + 2) ** 3 / 2;
+        showcaseAxisWorld.set(
+          showcaseAxis === 'x' ? 1 : 0,
+          showcaseAxis === 'y' ? 1 : 0,
+          0,
+        );
+        inverseModelQuaternion.copy(modelGroup.quaternion).invert();
+        showcaseAxisLocal
+          .copy(showcaseAxisWorld)
+          .applyQuaternion(inverseModelQuaternion)
+          .normalize();
+        contentPivot.quaternion.setFromAxisAngle(
+          showcaseAxisLocal,
+          eased * Math.PI * 2,
+        );
+        if (progress >= 1) {
+          showcaseStartedAt = -1;
+          contentPivot.quaternion.identity();
+          nextShowcaseAt = time + 4 + Math.random() * 4;
+        }
+      }
+    }
+    skullVariants.forEach((variant, index) => {
+      const basePosition: unknown = variant.userData.idleBasePosition;
+      const baseRotation: unknown = variant.userData.idleBaseRotation;
+      if (
+        !(basePosition instanceof THREE.Vector3) ||
+        !(baseRotation instanceof THREE.Euler)
+      )
+        return;
+      const motion = finalEffects.isActive() && !reducedMotion ? 1 : 0;
+      const phase = index * 1.73;
+      variant.position.set(
+        basePosition.x + Math.sin(time * 0.53 + phase) * 0.035 * motion,
+        basePosition.y + Math.sin(time * 0.84 + phase) * 0.045 * motion,
+        basePosition.z,
+      );
+      variant.rotation.set(
+        baseRotation.x + Math.sin(time * 0.66 + phase) * 0.055 * motion,
+        baseRotation.y + Math.sin(time * 0.49 + phase) * 0.085 * motion,
+        baseRotation.z + Math.cos(time * 0.58 + phase) * 0.025 * motion,
+      );
+    });
     const colorPhase =
       state.hueCycleRate > 0.001
         ? Math.sin(
@@ -342,35 +412,15 @@ export const createRenderer = async (
     headUniforms.uGlitch.value = glitchIntensity;
     headUniforms.uGlitchSeed.value = glitchSeed;
     headUniforms.uOpacity.value = state.headOpacity;
+    const finalMorph = finalEffects.getMorphState();
+    headUniforms.uFinalMorph.value = finalMorph.intensity;
+    headUniforms.uTear.value = finalMorph.tear;
     cubeMesh.visible = state.cubeOpacity > 0.004;
     if (!finalEffects.isActive() && !finalEffects.isFragmented()) {
       headVariants.forEach((variant, index) => {
         variant.visible = index === 0 && state.headOpacity > 0.004;
       });
     }
-    mouthRig.setOpacity(state.headOpacity);
-    mouthRig.setAllowed(headMesh.visible && !finalEffects.isFragmented());
-    mouthRig.update(
-      headUniforms.uExpression.value,
-      headUniforms.uExpressionDetail.value,
-    );
-    const skullHeatColor = new THREE.Color().setHSL(
-      (0.94 + Math.sin(time * 8) * 0.025) % 1,
-      0.92,
-      0.58 + headHeat * 0.18,
-    );
-    [proceduralSkull, externalSkull].forEach((variant) => {
-      getVariantMaterials(variant).forEach((material, index) => {
-        if (!material?.color) return;
-        const base =
-          index === 0 ? new THREE.Color(0xd9d1a8) : new THREE.Color(0x090307);
-        material.color
-          .copy(base)
-          .lerp(skullHeatColor, headHeat * (index === 0 ? 0.9 : 0.35));
-        material.opacity = state.headOpacity;
-        material.transparent = state.headOpacity < 0.999;
-      });
-    });
     const sweep = time * (1.15 + state.lightSweep * 1.8);
     meshUniforms.uKeyDirection.value.set(
       state.keyX + Math.sin(sweep) * state.lightSweep * 0.62,
@@ -390,6 +440,26 @@ export const createRenderer = async (
     headUniforms.uFillIntensity.value = state.fillIntensity;
     headUniforms.uRimIntensity.value = state.rimIntensity;
     headUniforms.uSpecular.value = state.specular;
+    skullVariants.forEach((variant) => {
+      getVariantMaterials(variant).forEach((material) => {
+        const uniforms = material.uniforms;
+        uniforms.uTime.value = reducedMotion ? 0 : time;
+        uniforms.uWarp.value = reducedMotion ? 0 : 0.055;
+        uniforms.uHeat.value = reducedMotion ? 0 : headHeat;
+        uniforms.uGlitch.value = reducedMotion ? 0 : glitchIntensity;
+        uniforms.uGlitchSeed.value = glitchSeed;
+        uniforms.uOpacity.value = state.headOpacity;
+        uniforms.uFinalMorph.value = finalMorph.intensity;
+        uniforms.uTear.value = finalMorph.tear;
+        const keyDirection = uniforms.uKeyDirection.value as unknown;
+        if (keyDirection instanceof THREE.Vector3)
+          keyDirection.copy(meshUniforms.uKeyDirection.value);
+        uniforms.uKeyIntensity.value = state.keyIntensity * restless;
+        uniforms.uFillIntensity.value = state.fillIntensity;
+        uniforms.uRimIntensity.value = state.rimIntensity;
+        uniforms.uSpecular.value = state.specular;
+      });
+    });
     sludgeUniforms.uTime.value = time;
     sludgeUniforms.uIntensity.value = state.sludge;
     spinX += delta * state.rotationRate * (0.43 + cubeHeat * 1.6);
@@ -408,7 +478,7 @@ export const createRenderer = async (
         spinZ * state.spinMix +
         Math.cos(time * 0.33) * state.idleRoll,
     );
-    const heatShake = cubeHeat * 0.16 + headHeat * 0.07;
+    const heatShake = cubeHeat * 0.16 + headHeat * 0.13;
     modelGroup.position.set(
       Math.sin(time * 31) * (state.shake + heatShake),
       Math.cos(time * 27) * (state.shake + heatShake),
@@ -431,6 +501,8 @@ export const createRenderer = async (
       ((viewportScale * currentPerspective) / basePerspective) *
         state.modelScale,
     );
+    effectsGroup.position.copy(modelGroup.position);
+    effectsGroup.scale.copy(modelGroup.scale);
     sludgePlane.position.set(
       interaction.parallaxX * -0.08,
       interaction.parallaxY * 0.06,
@@ -474,7 +546,7 @@ export const createRenderer = async (
       -1,
       1,
     );
-    interaction.targetYaw = -normalizedX * (reducedMotion ? 0.18 : 0.44);
+    interaction.targetYaw = normalizedX * (reducedMotion ? 0.18 : 0.44);
     interaction.targetPitch = normalizedY * (reducedMotion ? 0.1 : 0.26);
     interaction.targetParallaxX = reducedMotion ? 0 : normalizedX;
     interaction.targetParallaxY = reducedMotion ? 0 : normalizedY;
@@ -531,8 +603,18 @@ export const createRenderer = async (
     }
     cubeFire.setBurning(active, pressure);
   };
-  const setChapter = (index: number) => finalEffects.setActive(index === 3);
+  const setChapter = (index: number) => {
+    finalEffects.setActive(index === 3);
+    showcaseStartedAt = -1;
+    contentPivot.quaternion.identity();
+    nextShowcaseAt = ambient.sceneTime + 4 + Math.random() * 4;
+  };
   const setReducedMotion = (active: boolean) => {
+    reducedMotion = active;
+    if (active) {
+      showcaseStartedAt = -1;
+      contentPivot.quaternion.identity();
+    }
     finalEffects.setReducedMotion(active);
     cubeFire.setReducedMotion(active);
   };
@@ -543,7 +625,6 @@ export const createRenderer = async (
     renderer.setAnimationLoop(null);
     finalEffects.dispose();
     cubeFire.dispose();
-    mouthRig.dispose();
     cubeMesh.geometry.dispose();
     meshMaterial.dispose();
     headMesh.geometry.dispose();
@@ -551,7 +632,7 @@ export const createRenderer = async (
     sludgePlane.geometry.dispose();
     sludgeMaterial.dispose();
     depthField.dispose();
-    [proceduralSkull, externalSkull].forEach((variant) => {
+    skullVariants.forEach((variant) => {
       variant.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           (child as THREE.Mesh<THREE.BufferGeometry>).geometry.dispose();
@@ -559,6 +640,7 @@ export const createRenderer = async (
       });
       getVariantMaterials(variant).forEach((material) => material.dispose());
     });
+    skullTexture?.dispose();
     meshUniforms.uTexture.value.dispose();
     timer.dispose();
     renderer.dispose();

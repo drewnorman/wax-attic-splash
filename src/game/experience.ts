@@ -7,6 +7,7 @@ import { createOverlayParticles, createBurnLayer } from './canvas-effects';
 import { createRenderer } from './renderer';
 import {
   createTextFlicker,
+  createTitleMutations,
   createSceneStutter,
   createShopReveal,
 } from './dom-effects';
@@ -39,6 +40,7 @@ const createExperience = async () => {
   const state = { ...CHAPTERS[0] };
   const ambient = { timeScale: 1, sceneTime: 0 };
   const ambientTimelines = createTextFlicker(chapters);
+  const titleMutations = createTitleMutations(chapters);
   const overlayController = createOverlayParticles(
     overlayCanvas,
     state,
@@ -120,7 +122,6 @@ const createExperience = async () => {
     window.clearTimeout(cooldownTimer);
     const previous = chapters[activeIndex];
     const next = chapters[nextIndex];
-    const direction = nextIndex > activeIndex ? 1 : -1;
     const duration = reducedMotion ? 0.24 : TRANSITION_DURATION;
     const targetState = CHAPTERS[nextIndex];
     root.dataset.chapter = String(nextIndex);
@@ -132,10 +133,34 @@ const createExperience = async () => {
     next.classList.add('is-active');
     next.removeAttribute('inert');
     next.setAttribute('aria-hidden', 'false');
-    gsap.set(next, {
-      autoAlpha: reducedMotion ? 0 : 1,
-      yPercent: reducedMotion ? 0 : direction * 100,
-    });
+    const previousCopy =
+      activeIndex === 0
+        ? previous.querySelector('.scroll-cue')
+        : previous.querySelector(
+            '.chapter__title-block, .chapter__final-copy, h2',
+          );
+    const nextCopy =
+      nextIndex === 0
+        ? next.querySelector('.scroll-cue')
+        : next.querySelector('.chapter__title-block, .chapter__final-copy, h2');
+    gsap.set(next, { autoAlpha: 1, yPercent: 0 });
+    if (nextCopy) {
+      if (nextIndex === 0)
+        gsap.set(nextCopy, {
+          autoAlpha: reducedMotion ? 1 : 0,
+          y: reducedMotion ? 0 : 18,
+          scale: reducedMotion ? 1 : 0.9,
+          clipPath: reducedMotion ? 'none' : 'inset(0 100% 0 0)',
+        });
+      else
+        gsap.set(nextCopy, {
+          autoAlpha: reducedMotion ? 1 : 0,
+          xPercent: reducedMotion ? 0 : -115,
+          y: 0,
+          scale: 1,
+          clipPath: 'none',
+        });
+    }
     const timeline = gsap.timeline({
       defaults: {
         duration,
@@ -144,6 +169,14 @@ const createExperience = async () => {
       onComplete: () => {
         activeIndex = nextIndex;
         gsap.set(previous, { autoAlpha: 0, yPercent: 0 });
+        if (previousCopy)
+          gsap.set(previousCopy, {
+            clearProps: 'opacity,visibility,xPercent,y,scale,clipPath',
+          });
+        if (nextCopy)
+          gsap.set(nextCopy, {
+            clearProps: 'opacity,visibility,xPercent,y,scale,clipPath',
+          });
         setAccessibilityState(activeIndex);
         transitioning = false;
         if (activeIndex === 3) shopReveal.activate();
@@ -153,12 +186,56 @@ const createExperience = async () => {
         );
       },
     });
-    timeline.to(
-      previous,
-      { autoAlpha: 0, yPercent: reducedMotion ? 0 : direction * -100 },
-      0,
-    );
-    timeline.to(next, { autoAlpha: 1, yPercent: 0 }, 0);
+    if (previousCopy) {
+      if (activeIndex === 0)
+        timeline.to(
+          previousCopy,
+          {
+            autoAlpha: 0,
+            y: reducedMotion ? 0 : 16,
+            scale: reducedMotion ? 1 : 0.86,
+            clipPath: reducedMotion ? 'none' : 'inset(0 0 0 100%)',
+            duration: reducedMotion ? 0.12 : 0.42,
+          },
+          0,
+        );
+      else
+        timeline.to(
+          previousCopy,
+          {
+            autoAlpha: 0,
+            xPercent: reducedMotion ? 0 : -115,
+            duration: reducedMotion ? 0.12 : 0.48,
+            ease: reducedMotion ? 'power1.out' : 'power3.in',
+          },
+          0,
+        );
+    }
+    if (nextCopy) {
+      if (nextIndex === 0)
+        timeline.to(
+          nextCopy,
+          {
+            autoAlpha: 1,
+            y: 0,
+            scale: 1,
+            clipPath: 'inset(0 0% 0 0)',
+            duration: reducedMotion ? 0.12 : 0.58,
+          },
+          reducedMotion ? 0.12 : 0.5,
+        );
+      else
+        timeline.to(
+          nextCopy,
+          {
+            autoAlpha: 1,
+            xPercent: 0,
+            duration: reducedMotion ? 0.12 : 0.6,
+            ease: reducedMotion ? 'power1.out' : 'power3.out',
+          },
+          reducedMotion ? 0.12 : 0.5,
+        );
+    }
     timeline.to(
       state,
       {
@@ -267,11 +344,7 @@ const createExperience = async () => {
     burnController.add(clientX, clientY, pressure || 0.7);
     rendererController?.setBurnPoint(clientX, clientY);
     burnReactive.forEach((element) => {
-      if (
-        !(element instanceof HTMLElement) ||
-        !element.closest('.is-active, .foreground-motifs, .progress')
-      )
-        return;
+      if (!element.closest('.is-active, .foreground-motifs, .progress')) return;
       const rect = element.getBoundingClientRect();
       if (
         clientX < rect.left ||
@@ -366,12 +439,9 @@ const createExperience = async () => {
   const releaseInspection = (event: PointerEvent) => {
     window.clearTimeout(touchHoldTimer);
     touchOrigin = null;
-    if (
-      inspectingPointerId === null ||
-      (event && event.pointerId !== inspectingPointerId)
-    )
+    if (inspectingPointerId === null || event.pointerId !== inspectingPointerId)
       return;
-    if (event && root.hasPointerCapture?.(event.pointerId))
+    if (root.hasPointerCapture?.(event.pointerId))
       root.releasePointerCapture(event.pointerId);
     inspectingPointerId = null;
     lastBurnPoint = null;
@@ -419,9 +489,8 @@ const createExperience = async () => {
   };
   const onScrollCueClick = () => goTo(1);
   const onProgressClick = (event: MouseEvent) => {
-    if (event.currentTarget instanceof HTMLElement) {
+    if (event.currentTarget instanceof HTMLElement)
       goTo(Number(event.currentTarget.dataset.target));
-    }
   };
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('resize', onResize);
@@ -444,6 +513,7 @@ const createExperience = async () => {
     overlayController.setReducedMotion(true);
     burnController.setReducedMotion(true);
     stutterController.setReducedMotion(true);
+    titleMutations.setReducedMotion(true);
     ambientTimelines.forEach((timeline) => {
       timeline.pause(0);
     });
@@ -471,6 +541,7 @@ const createExperience = async () => {
       overlayController.setReducedMotion(false);
       burnController.setReducedMotion(false);
       stutterController.setReducedMotion(false);
+      titleMutations.setReducedMotion(false);
       ambientTimelines.forEach((timeline) => {
         timeline.play();
       });
@@ -478,9 +549,9 @@ const createExperience = async () => {
     };
   });
   await preloadPromise;
-  await new Promise<void>((resolve) =>
-    window.requestAnimationFrame(() => resolve()),
-  );
+  await new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
   await bootLoader.finish();
   root.classList.add('is-introduced');
   const destroy = () => {
@@ -505,6 +576,7 @@ const createExperience = async () => {
     ambientTimelines.forEach((timeline) => {
       timeline.kill();
     });
+    titleMutations.destroy();
     overlayController.destroy();
     burnController.destroy();
     stutterController.destroy();

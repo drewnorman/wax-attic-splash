@@ -37,9 +37,9 @@ export const vertexShader = /* glsl */ `
     float glitchBand = floor((transformed.y + aSeed * 0.37) * 4.5);
     float glitchNoise = fract(sin(glitchBand * 91.17 + uGlitchSeed * 47.31) * 43758.5453);
     float glitchGate = step(0.38, glitchNoise) * uGlitch;
-    transformed.x += (glitchNoise - 0.5) * 1.9 * glitchGate;
-    transformed.y *= 1.0 + (glitchNoise - 0.42) * 0.72 * glitchGate;
-    transformed.z += sin(aSeed * 83.0 + uGlitchSeed) * 0.95 * glitchGate;
+    transformed.x += (glitchNoise - 0.5) * 2.75 * glitchGate;
+    transformed.y *= 1.0 + (glitchNoise - 0.42) * 0.98 * glitchGate;
+    transformed.z += sin(aSeed * 83.0 + uGlitchSeed) * 1.48 * glitchGate;
     transformed += radial * sin(uTime * 34.0 + aSeed * 47.0) * uBurn * 0.075;
     vec4 world = modelMatrix * vec4(transformed, 1.0);
     vLocalPosition = transformed;
@@ -62,8 +62,8 @@ export const headVertexShader = /* glsl */ `
   uniform float uBurn;
   uniform float uGlitch;
   uniform float uGlitchSeed;
-  uniform vec4 uExpression;
-  uniform vec4 uExpressionDetail;
+  uniform float uFinalMorph;
+  uniform float uTear;
   varying vec3 vLocalPosition;
   varying vec3 vWorldPosition;
   varying float vPulse;
@@ -84,6 +84,13 @@ export const headVertexShader = /* glsl */ `
       sin(position.z * 3.6 + uTime * 0.23 + seed * 4.0)
     ) / 3.0;
     transformed += normalize(normal + vec3(0.0001)) * slowWarp * uHeadWarp;
+    float morphWave = sin(position.y * 5.8 + uTime * 2.1 + seed * 5.0) * 0.55
+      + sin(position.x * 7.2 - uTime * 1.7) * 0.3;
+    transformed += normalize(normal + vec3(0.0001)) * morphWave * uFinalMorph * 0.16;
+    transformed += radial * sin(uTime * 4.6 + seed * 11.0) * uFinalMorph * 0.075;
+    float tearBand = step(0.72, fract((position.y + 1.5) * 3.1 + uGlitchSeed * 0.17)) * uTear;
+    transformed.x += sign(position.x + 0.001) * tearBand * (0.12 + seed * 0.18);
+    transformed.z += (seed - 0.5) * tearBand * 0.32;
     transformed += radial * sin(uTime * 3.2 + seed * 6.28318) * uBurn * 0.085;
     transformed.x += sin(uTime * 31.0 + seed * 51.0) * uBurn * 0.045;
     float glitchBand = floor((position.y + seed * 0.24) * 5.0);
@@ -92,36 +99,11 @@ export const headVertexShader = /* glsl */ `
     transformed.x += (glitchNoise - 0.5) * 1.3 * glitchGate;
     transformed.y *= 1.0 + (glitchNoise - 0.46) * 0.42 * glitchGate;
     transformed.z += sin(seed * 67.0 + uGlitchSeed) * 0.62 * glitchGate;
-    float front = smoothstep(-0.1, 0.58, position.z);
-    float center = 1.0 - smoothstep(0.25, 1.0, abs(position.x));
-    float brow = exp(-pow((position.y - 0.46) / 0.17, 2.0)) * front;
-    float browLeft = brow * (1.0 - smoothstep(-0.05, 0.32, position.x));
-    float browRight = brow * smoothstep(-0.32, 0.05, position.x);
-    float eyes = exp(-pow((position.y - 0.25) / 0.14, 2.0)) * front;
-    float mouth = exp(-pow((position.y + 0.46) / 0.14, 2.0)) * center * front;
-    float upperLip = mouth * smoothstep(-0.54, -0.42, position.y);
-    float lowerLip = mouth * (1.0 - smoothstep(-0.58, -0.46, position.y));
-    float mouthSide = smoothstep(0.18, 0.72, abs(position.x)) * mouth;
-    float jaw = (1.0 - smoothstep(-1.08, -0.38, position.y)) * front;
-    transformed.y += browLeft * uExpression.x * 0.16;
-    transformed.y += browRight * uExpression.y * 0.16;
-    transformed.y -= eyes * uExpressionDetail.z * 0.1;
-    transformed.y += mouth * uExpression.z * (position.x < 0.0 ? 1.0 : -1.0) * 0.11;
-    transformed.y += upperLip * uExpressionDetail.w * 0.12;
-    transformed.y -= lowerLip * (uExpressionDetail.w * 0.15 + uExpression.w * 0.08);
-    transformed.x += sign(position.x) * mouthSide * uExpressionDetail.x * 0.12;
-    transformed.z += mouth * uExpressionDetail.y * 0.2;
-    transformed.y -= jaw * uExpression.w * 0.18;
-    transformed.z += jaw * uExpression.w * 0.08;
     float cropNoise = sin(position.x * 10.7 + sin(position.z * 8.3) * 1.8) * 0.052;
     cropNoise += sin(position.z * 15.1 - position.x * 4.6) * 0.026;
-    vHeadCrop = position.y - (-1.12 + cropNoise);
-    float mouthHeight = 0.065 + uExpressionDetail.w * 0.13 + uExpression.w * 0.055;
-    vec2 mouthPoint = vec2(position.x / 0.5, (position.y + 0.46) / mouthHeight);
-    float mouthShape = dot(mouthPoint, mouthPoint);
-    float openingStrength = smoothstep(0.16, 0.5, uExpressionDetail.w * 0.72 + uExpression.w * 0.58);
-    vMouthAperture = (1.0 - smoothstep(0.68, 1.0, mouthShape)) * front * openingStrength;
-    vMouthPoint = mouthPoint;
+    vHeadCrop = position.y - (-0.94 + cropNoise);
+    vMouthAperture = 0.0;
+    vMouthPoint = vec2(99.0);
     vHeadMask = 1.0;
     vec4 world = modelMatrix * vec4(transformed, 1.0);
     vLocalPosition = transformed;
@@ -129,6 +111,92 @@ export const headVertexShader = /* glsl */ `
     vPulse = pulse;
     vUvLocal = uv;
     gl_Position = projectionMatrix * viewMatrix * world;
+  }
+`;
+
+export const skullVertexShader = /* glsl */ `
+  uniform float uTime;
+  uniform float uWarp;
+  uniform float uHeat;
+  uniform float uGlitch;
+  uniform float uGlitchSeed;
+  uniform float uFinalMorph;
+  uniform float uTear;
+  varying vec3 vLocalPosition;
+  varying vec3 vWorldPosition;
+  varying float vPulse;
+  varying vec2 vUvLocal;
+
+  void main() {
+    float seed = fract(sin(dot(position.xy + position.z, vec2(12.9898, 78.233))) * 43758.5453);
+    float pulse = sin(uTime * 1.55 + seed * 6.28318) * 0.5 + 0.5;
+    vec3 transformed = position;
+    vec3 radial = normalize(position + vec3(0.0001));
+    vec3 surfaceNormal = normalize(normal + vec3(0.0001));
+    float slowWarp = (sin(position.y * 3.8 + uTime * 0.52) + sin(position.x * 4.7 - uTime * 0.37 + seed * 3.0) + sin(position.z * 5.4 + uTime * 0.31)) / 3.0;
+    transformed += surfaceNormal * slowWarp * (uWarp + uHeat * 0.18);
+    float morphWave = sin(position.y * 6.2 + uTime * 2.35 + seed * 5.0) * 0.62
+      + sin(position.x * 8.0 - uTime * 1.85) * 0.34;
+    transformed += surfaceNormal * morphWave * uFinalMorph * 0.2;
+    transformed += radial * sin(uTime * 5.1 + seed * 13.0) * uFinalMorph * 0.09;
+    transformed += radial * sin(uTime * 3.8 + seed * 9.0) * (uWarp * 0.22 + uHeat * 0.13);
+    transformed *= 1.0 + uHeat * (0.035 + pulse * 0.025);
+    transformed += surfaceNormal * sin(uTime * 42.0 + seed * 71.0) * uHeat * 0.045;
+    float band = floor((position.y + seed * 0.28) * 5.5);
+    float bandNoise = fract(sin(band * 83.17 + uGlitchSeed * 39.31) * 43758.5453);
+    float gate = step(0.52, bandNoise) * (uGlitch * 0.34 + uHeat * 0.3);
+    transformed.x += (bandNoise - 0.5) * 0.48 * gate;
+    transformed.z += sin(seed * 61.0 + uGlitchSeed) * 0.3 * gate;
+    float tearBand = step(0.7, fract((position.y + 1.8) * 3.4 + uGlitchSeed * 0.19)) * uTear;
+    transformed.x += sign(position.x + 0.001) * tearBand * (0.15 + seed * 0.2);
+    transformed.z += (seed - 0.5) * tearBand * 0.38;
+    vec4 world = modelMatrix * vec4(transformed, 1.0);
+    vLocalPosition = transformed;
+    vWorldPosition = world.xyz;
+    vPulse = pulse;
+    vUvLocal = uv;
+    gl_Position = projectionMatrix * viewMatrix * world;
+  }
+`;
+
+export const skullFragmentShader = /* glsl */ `
+  uniform sampler2D uTexture;
+  uniform vec3 uKeyDirection;
+  uniform float uKeyIntensity;
+  uniform float uFillIntensity;
+  uniform float uRimIntensity;
+  uniform float uSpecular;
+  uniform float uOpacity;
+  uniform float uShadow;
+  uniform float uHeat;
+  varying vec3 vLocalPosition;
+  varying vec3 vWorldPosition;
+  varying float vPulse;
+  varying vec2 vUvLocal;
+
+  void main() {
+    vec3 normal = normalize(cross(dFdx(vWorldPosition), dFdy(vWorldPosition)));
+    if (!gl_FrontFacing) normal *= -1.0;
+    vec3 lightDirection = normalize(uKeyDirection);
+    float diffuse = max(dot(normal, lightDirection), 0.0) * uKeyIntensity;
+    vec3 fillDirection = normalize(vec3(-lightDirection.x, 0.25, lightDirection.z));
+    float fill = max(dot(normal, fillDirection), 0.0) * uFillIntensity;
+    float rim = pow(1.0 - abs(normal.z), 2.25) * uRimIntensity * (1.0 + uHeat * 1.1);
+    vec3 blend = pow(abs(normal), vec3(4.0));
+    blend /= max(blend.x + blend.y + blend.z, 0.0001);
+    vec3 p = vLocalPosition * 0.58;
+    vec3 texel = texture2D(uTexture, p.yz).rgb * blend.x + texture2D(uTexture, p.xz).rgb * blend.y + texture2D(uTexture, p.xy).rgb * blend.z;
+    float textureValue = dot(texel, vec3(0.299, 0.587, 0.114));
+    vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
+    vec3 halfway = normalize(lightDirection + viewDirection);
+    float highlight = pow(max(dot(normal, halfway), 0.0), 26.0) * uSpecular;
+    vec3 deep = mix(vec3(0.012, 0.004, 0.02), vec3(0.018, 0.012, 0.025), uShadow);
+    vec3 violet = mix(vec3(0.56, 0.08, 0.78), vec3(0.10, 0.035, 0.14), uShadow);
+    vec3 color = mix(deep, violet, (diffuse * 0.68 + fill * 0.36 + rim * 0.48) * (0.42 + textureValue * 0.68));
+    color += vec3(0.45, 0.86, 0.56) * highlight + vec3(0.25, 0.65, 0.42) * rim * 0.15;
+    vec3 heatColor = mix(vec3(1.0, 0.12, 0.015), vec3(1.0, 0.08, 0.48), vPulse);
+    color = mix(color, color * 0.22 + heatColor * (0.78 + rim), uHeat * (uShadow > 0.5 ? 0.42 : 0.9));
+    gl_FragColor = vec4(color, uOpacity);
   }
 `;
 

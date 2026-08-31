@@ -67,20 +67,23 @@
     drop-shadow(-0.14rem 0 #e7ff35);
 }
 
-.burn-reactive.is-burn-hit[data-burn-target='sigils'] .is-stage-glyph {
+.burn-reactive.is-burn-hit[data-burn-target='sigils'] .is-stage-glyph,
+.stage-indicator.is-burn-hit span {
   color: #fff7a3;
   animation: burn-sigil-scatter 260ms steps(4, end) infinite alternate;
   filter: drop-shadow(0 0 0.55rem #ff3518);
 }
 
 .burn-reactive.is-burn-hit[data-burn-target='sigils']
-  .is-stage-glyph:nth-child(3n + 2) {
+  .is-stage-glyph:nth-child(3n + 2),
+.stage-indicator.is-burn-hit span:nth-child(3n + 2) {
   animation-delay: -90ms;
   animation-direction: alternate-reverse;
 }
 
 .burn-reactive.is-burn-hit[data-burn-target='sigils']
-  .is-stage-glyph:nth-child(3n + 3) {
+  .is-stage-glyph:nth-child(3n + 3),
+.stage-indicator.is-burn-hit span:nth-child(3n + 3) {
   animation-delay: -180ms;
 }
 
@@ -164,117 +167,6 @@
   box-shadow: 0 0 0.55rem #ff3212;
 }
 
-.wax-splatter-field {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.wax-splatter-field i {
-  position: absolute;
-  top: 18%;
-  left: 12%;
-  width: clamp(2.5rem, 7vw, 7rem);
-  aspect-ratio: 1.2;
-  border-radius: 43% 57% 62% 38% / 55% 35% 65% 45%;
-  background: radial-gradient(
-    circle at 36% 31%,
-    #ff8291 0 5%,
-    #e5153a 8% 42%,
-    #62041e 72%
-  );
-  box-shadow: 0 0 0.75rem rgb(255 24 56 / 52%);
-  clip-path: polygon(
-    6% 18%,
-    29% 3%,
-    42% 22%,
-    68% 0,
-    78% 28%,
-    100% 42%,
-    78% 58%,
-    92% 91%,
-    59% 77%,
-    40% 100%,
-    28% 72%,
-    0 81%,
-    17% 52%
-  );
-  opacity: 0;
-  transform: scale(0.05) rotate(calc(var(--splat-index) * 19deg));
-}
-
-.wax-splatter-field i:nth-child(2) {
-  left: 35%;
-  top: 8%;
-}
-
-.wax-splatter-field i:nth-child(3) {
-  left: 64%;
-  top: 16%;
-}
-
-.wax-splatter-field i:nth-child(4) {
-  left: 82%;
-  top: 31%;
-}
-
-.wax-splatter-field i:nth-child(5) {
-  left: 8%;
-  top: 55%;
-}
-
-.wax-splatter-field i:nth-child(6) {
-  left: 28%;
-  top: 67%;
-}
-
-.wax-splatter-field i:nth-child(7) {
-  left: 55%;
-  top: 52%;
-}
-
-.wax-splatter-field i:nth-child(8) {
-  left: 76%;
-  top: 71%;
-}
-
-.wax-splatter-field i:nth-child(9) {
-  left: 46%;
-  top: 29%;
-}
-
-.wax-splatter-field i:nth-child(10) {
-  left: 91%;
-  top: 8%;
-}
-
-.wax-splatter-field i:nth-child(11) {
-  left: 17%;
-  top: 36%;
-}
-
-.wax-splatter-field i:nth-child(12) {
-  left: 67%;
-  top: 86%;
-}
-
-.wax-splatter-field i:nth-child(13) {
-  left: 3%;
-  top: 84%;
-}
-
-.wax-splatter-field i:nth-child(14) {
-  left: 88%;
-  top: 56%;
-}
-
-.is-final-splattering .wax-splatter-field i {
-  animation: wax-splat 1.85s steps(8, end) both;
-  animation-delay: calc(var(--splat-index) * 72ms);
-}
-
 .is-head-switching #scene {
   animation: head-switch-flash 170ms steps(3, end);
 }
@@ -346,31 +238,6 @@
   }
 }
 
-@keyframes wax-splat {
-  0% {
-    opacity: 0;
-    transform: scale(0.05) rotate(calc(var(--splat-index) * 19deg));
-  }
-
-  22%,
-  68% {
-    opacity: 0.88;
-    transform: scale(1) rotate(calc(var(--splat-index) * 19deg));
-  }
-
-  82% {
-    opacity: 0.58;
-    transform: scale(1.06, 1.28) translateY(0.8rem)
-      rotate(calc(var(--splat-index) * 19deg));
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(0.96, 1.52) translateY(2.2rem)
-      rotate(calc(var(--splat-index) * 19deg));
-  }
-}
-
 @keyframes head-switch-flash {
   50% {
     opacity: 0.22;
@@ -384,14 +251,11 @@
   #experience.is-burning .motif-scene,
   .burn-reactive.is-burn-hit,
   .burn-reactive.is-burn-hit .is-stage-glyph,
+  .stage-indicator.is-burn-hit span,
   .progress.is-burn-hit::before,
   .progress.is-burn-hit::after,
   .is-head-switching #scene {
     animation: none;
     transform: none;
-  }
-
-  .wax-splatter-field {
-    display: none;
   }
 }
