@@ -13,6 +13,9 @@ export const vertexShader = /* glsl */ `
   varying float vPulse;
   varying vec2 vUvLocal;
   varying float vHeadMask;
+  varying float vHeadCrop;
+  varying float vMouthAperture;
+  varying vec2 vMouthPoint;
 
   float waveNoise(vec3 point) {
     float first = sin(point.x * 4.2 + uTime * (1.1 + uChaos * 4.2));
@@ -44,6 +47,9 @@ export const vertexShader = /* glsl */ `
     vPulse = pulse;
     vUvLocal = uv;
     vHeadMask = 1.0;
+    vHeadCrop = 1.0;
+    vMouthAperture = 0.0;
+    vMouthPoint = vec2(99.0);
     gl_Position = projectionMatrix * viewMatrix * world;
   }
 `;
@@ -57,11 +63,15 @@ export const headVertexShader = /* glsl */ `
   uniform float uGlitch;
   uniform float uGlitchSeed;
   uniform vec4 uExpression;
+  uniform vec4 uExpressionDetail;
   varying vec3 vLocalPosition;
   varying vec3 vWorldPosition;
   varying float vPulse;
   varying vec2 vUvLocal;
   varying float vHeadMask;
+  varying float vHeadCrop;
+  varying float vMouthAperture;
+  varying vec2 vMouthPoint;
 
   void main() {
     float seed = fract(sin(dot(position.xy, vec2(12.9898, 78.233))) * 43758.5453);
@@ -84,15 +94,34 @@ export const headVertexShader = /* glsl */ `
     transformed.z += sin(seed * 67.0 + uGlitchSeed) * 0.62 * glitchGate;
     float front = smoothstep(-0.1, 0.58, position.z);
     float center = 1.0 - smoothstep(0.25, 1.0, abs(position.x));
-    float brow = exp(-pow((position.y - 0.5) / 0.2, 2.0)) * front;
-    float eyes = exp(-pow((position.y - 0.29) / 0.16, 2.0)) * front;
-    float mouth = exp(-pow((position.y + 0.5) / 0.16, 2.0)) * center * front;
-    float jaw = (1.0 - smoothstep(-1.35, -0.35, position.y)) * front;
-    transformed.y += brow * uExpression.x * (position.x < 0.0 ? -1.0 : 1.0) * 0.13;
-    transformed.y -= eyes * uExpression.y * 0.1;
-    transformed.z += mouth * uExpression.z * 0.2;
-    transformed.y -= mouth * uExpression.w * 0.16;
-    transformed.z += jaw * uExpression.w * 0.1;
+    float brow = exp(-pow((position.y - 0.46) / 0.17, 2.0)) * front;
+    float browLeft = brow * (1.0 - smoothstep(-0.05, 0.32, position.x));
+    float browRight = brow * smoothstep(-0.32, 0.05, position.x);
+    float eyes = exp(-pow((position.y - 0.25) / 0.14, 2.0)) * front;
+    float mouth = exp(-pow((position.y + 0.46) / 0.14, 2.0)) * center * front;
+    float upperLip = mouth * smoothstep(-0.54, -0.42, position.y);
+    float lowerLip = mouth * (1.0 - smoothstep(-0.58, -0.46, position.y));
+    float mouthSide = smoothstep(0.18, 0.72, abs(position.x)) * mouth;
+    float jaw = (1.0 - smoothstep(-1.08, -0.38, position.y)) * front;
+    transformed.y += browLeft * uExpression.x * 0.16;
+    transformed.y += browRight * uExpression.y * 0.16;
+    transformed.y -= eyes * uExpressionDetail.z * 0.1;
+    transformed.y += mouth * uExpression.z * (position.x < 0.0 ? 1.0 : -1.0) * 0.11;
+    transformed.y += upperLip * uExpressionDetail.w * 0.12;
+    transformed.y -= lowerLip * (uExpressionDetail.w * 0.15 + uExpression.w * 0.08);
+    transformed.x += sign(position.x) * mouthSide * uExpressionDetail.x * 0.12;
+    transformed.z += mouth * uExpressionDetail.y * 0.2;
+    transformed.y -= jaw * uExpression.w * 0.18;
+    transformed.z += jaw * uExpression.w * 0.08;
+    float cropNoise = sin(position.x * 10.7 + sin(position.z * 8.3) * 1.8) * 0.052;
+    cropNoise += sin(position.z * 15.1 - position.x * 4.6) * 0.026;
+    vHeadCrop = position.y - (-1.12 + cropNoise);
+    float mouthHeight = 0.065 + uExpressionDetail.w * 0.13 + uExpression.w * 0.055;
+    vec2 mouthPoint = vec2(position.x / 0.5, (position.y + 0.46) / mouthHeight);
+    float mouthShape = dot(mouthPoint, mouthPoint);
+    float openingStrength = smoothstep(0.16, 0.5, uExpressionDetail.w * 0.72 + uExpression.w * 0.58);
+    vMouthAperture = (1.0 - smoothstep(0.68, 1.0, mouthShape)) * front * openingStrength;
+    vMouthPoint = mouthPoint;
     vHeadMask = 1.0;
     vec4 world = modelMatrix * vec4(transformed, 1.0);
     vLocalPosition = transformed;
@@ -119,9 +148,13 @@ export const fragmentShader = /* glsl */ `
   varying float vPulse;
   varying vec2 vUvLocal;
   varying float vHeadMask;
+  varying float vHeadCrop;
+  varying float vMouthAperture;
+  varying vec2 vMouthPoint;
 
   void main() {
     if (vHeadMask < 0.015) discard;
+    if (vHeadCrop < 0.0) discard;
     vec3 normal = normalize(cross(dFdx(vWorldPosition), dFdy(vWorldPosition)));
     if (!gl_FrontFacing) normal *= -1.0;
     vec3 lightDirection = normalize(uKeyDirection);

@@ -100,23 +100,8 @@
   animation-duration: 0.18s;
 }
 
-.progress__mark.is-active::before {
-  width: 1.65rem;
-  background: var(--color-primary);
-  box-shadow: 0 0 0.75rem #0fed19;
-}
-
-.progress__mark.is-active span {
-  color: #0b7415;
-  transform: translate(-0.2rem, -50%);
-}
-
-#experience[data-chapter='2'] .progress__mark span {
-  color: rgb(205 255 207 / 70%);
-}
-
-#experience[data-chapter='2'] .progress__track {
-  background: rgb(190 255 194 / 32%);
+#experience[data-chapter='2'] .progress__reservoir {
+  border-color: rgb(190 255 194 / 42%);
 }
 
 .scroll-cue:focus-visible,
@@ -132,37 +117,33 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: radial-gradient(
-    circle at 50% 50%,
-    #232a24,
-    var(--color-loading) 62%
-  );
+  background: radial-gradient(circle at 50% 50%, #20241f, #0b0e0c 68%);
   transition:
-    opacity 450ms ease,
-    visibility 450ms ease;
+    opacity 180ms steps(2, end),
+    visibility 180ms steps(2, end);
 }
 
 #loadingOverlay[hidden] {
   display: none;
 }
 
-#loadingIndicator {
-  color: #86a489;
-  letter-spacing: 0.04em;
-}
-
 .boot-panel {
   position: relative;
-  width: min(34rem, calc(100vw - 2.5rem));
+  width: min(17rem, calc(100vw - 2.5rem));
   box-sizing: border-box;
-  padding: clamp(1rem, 3vw, 1.8rem);
-  border: 2px solid #4b5b4d;
+  padding: 0.9rem 1rem 0.85rem;
+  border: 1px solid #66816a;
   color: #c9e1cb;
-  background: #111512;
+  background:
+    url('/images/grunge-darkness.webp') center / 25rem,
+    #0b0e0c;
+  background-blend-mode: soft-light;
   box-shadow:
-    0.45rem 0.45rem 0 #080a08,
-    inset 0 0 2.6rem rgb(25 255 70 / 4%);
+    0.38rem 0.42rem 0 #030403,
+    inset 0 0 1.4rem rgb(25 255 70 / 4%);
   text-align: left;
+  transform: rotate(-0.7deg);
+  animation: boot-jitter 1.4s steps(2, end) infinite;
 }
 
 .boot-panel::after {
@@ -177,21 +158,13 @@
   pointer-events: none;
 }
 
-.boot-panel__brand {
-  margin: 0 0 1.3rem;
-  color: #0fed19;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-}
-
 .boot-panel__readout {
   display: flex;
   min-height: 1.4rem;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.85rem;
-  text-transform: uppercase;
+  color: #b5d2b8;
+  font-size: 0.82rem;
+  text-transform: lowercase;
 }
 
 #loadingPercent {
@@ -200,17 +173,10 @@
   font-weight: 900;
 }
 
-.boot-panel__cursor {
-  width: 0.55rem;
-  height: 1rem;
-  background: #0fed19;
-  animation: boot-blink 0.8s steps(1) infinite;
-}
-
 .boot-panel__bar {
-  height: 0.65rem;
-  margin: 0.8rem 0 1.1rem;
-  border: 1px solid #526655;
+  height: 0.42rem;
+  margin: 0.65rem 0 0;
+  border: 1px solid #465a49;
   background: repeating-linear-gradient(
     90deg,
     transparent 0 8%,
@@ -229,35 +195,6 @@
   );
   filter: drop-shadow(0 0 0.35rem #0fed19);
   transition: width 180ms steps(10);
-}
-
-.boot-panel__checks {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.45rem 1.5rem;
-  color: #829185;
-  font-size: 0.62rem;
-  letter-spacing: 0.08em;
-}
-
-.boot-panel__checks span {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px dotted #39453b;
-  padding-bottom: 0.2rem;
-}
-
-.boot-panel__checks b {
-  color: #a5b6a8;
-  font-weight: 400;
-}
-
-.boot-panel__checks [data-task-state='READY'] {
-  color: #0fed19;
-}
-
-.boot-panel__checks [data-task-state='DEGRADED'] {
-  color: #ffb028;
 }
 
 #loadingOverlay.is-ready .boot-panel {

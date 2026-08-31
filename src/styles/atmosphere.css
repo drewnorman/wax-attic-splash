@@ -17,33 +17,41 @@
 
 #experience[data-chapter='0'] .backdrop {
   background:
-    radial-gradient(circle at 47% 44%, #c2c7bd 0 7%, transparent 35%),
-    linear-gradient(142deg, #9ea39b, #b5b8b0 54%, #90968e);
+    radial-gradient(circle at 47% 44%, #394039 0 7%, transparent 35%),
+    linear-gradient(142deg, #242824, #292d29 54%, #1d211e);
 }
 
 #experience[data-chapter='1'] .backdrop {
   background:
-    radial-gradient(circle at 54% 48%, #c2bdb4, transparent 38%),
-    linear-gradient(155deg, #aaa69f, #b9b7b0 55%, #8f918b);
+    radial-gradient(circle at 54% 48%, #403a32, transparent 38%),
+    linear-gradient(155deg, #282521, #302d29 55%, #201f1c);
+}
+
+#experience[data-chapter='2'] .backdrop {
+  background:
+    radial-gradient(
+      circle at 48% 45%,
+      #491d46 0 9%,
+      #1c3521 36%,
+      transparent 62%
+    ),
+    linear-gradient(128deg, #190c1c, #293613 48%, #09070d);
 }
 
 #experience[data-chapter='3'] .backdrop {
   background:
-    radial-gradient(ellipse at 50% 48%, #bec2bc, transparent 43%),
-    linear-gradient(135deg, #9da19d, #b4b7b2 52%, #8d918e);
+    radial-gradient(ellipse at 50% 48%, #39383e, transparent 43%),
+    linear-gradient(135deg, #232328, #29292d 52%, #1d1d21);
 }
 
 #experience[data-chapter='0'] .chapter,
 #experience[data-chapter='1'] .chapter,
 #experience[data-chapter='3'] .chapter {
-  color: #092a10;
+  color: var(--color-primary);
 }
 
-#experience[data-chapter='0'] .chapter__number,
-#experience[data-chapter='1'] .chapter__number,
-#experience[data-chapter='3'] .chapter__number,
 #experience[data-chapter='0'] .scroll-cue {
-  color: rgb(4 37 11 / 72%);
+  color: rgb(174 205 177 / 72%);
 }
 
 .backdrop__motifs {

@@ -1,5 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '⦿'];
+const waxSplats = Array.from({ length: 14 });
 ---
 
 <BaseLayout
@@ -58,6 +61,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <canvas id="scene" aria-hidden="true"></canvas>
     <canvas id="smokeCanvas" aria-hidden="true"></canvas>
 
+    <div class="wax-splatter-field" aria-hidden="true">
+      {waxSplats.map((_, index) => <i style={`--splat-index:${index}`} />)}
+    </div>
+
     <div class="analog-overlay" aria-hidden="true">
       <canvas id="overlayParticles"></canvas>
       <div class="analog-overlay__scanlines"></div>
@@ -70,17 +77,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
 
     <div class="foreground-motifs" aria-hidden="true">
-      <div class="edge-tape edge-tape--left">
+      <div
+        class="edge-tape edge-tape--left burn-reactive"
+        data-burn-target="ticker"
+      >
         <div class="edge-tape__track">
           <span>WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span><span
             >WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span
-          >
-        </div>
-      </div>
-      <div class="edge-tape edge-tape--right">
-        <div class="edge-tape__track">
-          <span>1 / 1 · NATURAL SELECTION · 1 / 1 ·&nbsp;</span><span
-            >1 / 1 · NATURAL SELECTION · 1 / 1 ·&nbsp;</span
           >
         </div>
       </div>
@@ -92,10 +95,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         data-index="0"
         aria-labelledby="chapter-0-title"
       >
-        <p class="chapter__number" aria-hidden="true">001 / 004</p>
-        <h1 id="chapter-0-title">SECOND<br />LIFE</h1>
+        <h1 id="chapter-0-title" class="visually-hidden">Wax Attic</h1>
         <button class="scroll-cue observer-ignore" id="scrollCue" type="button">
-          scroll / swipe to evolve <span aria-hidden="true">↓</span>
+          scroll / swipe to mutate <span aria-hidden="true">↓</span>
         </button>
       </section>
 
@@ -106,8 +108,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         aria-hidden="true"
         inert
       >
-        <p class="chapter__number" aria-hidden="true">002 / 004</p>
-        <h2 id="chapter-1-title">NATURAL<br />SELECTION</h2>
+        <p
+          class="chapter__sigil-strip burn-reactive"
+          data-burn-target="sigils"
+          aria-hidden="true"
+        >
+          {
+            stageGlyphs.map((glyph, index) => (
+              <span class:list={{ 'is-stage-glyph': index < 3 }}>{glyph}</span>
+            ))
+          }
+        </p>
+        <h2 id="chapter-1-title" class="burn-reactive" data-burn-target="title">
+          ONE OF<br />ONE
+        </h2>
       </section>
 
       <section
@@ -118,8 +132,28 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         inert
       >
         <div class="chapter__title-block">
-          <p class="chapter__number" aria-hidden="true">003 / 004</p>
-          <h2 id="chapter-2-title">ONE OF<br />ONE</h2>
+          <p
+            class="chapter__sigil-strip burn-reactive"
+            data-burn-target="sigils"
+            aria-hidden="true"
+          >
+            {
+              stageGlyphs.map((glyph, index) => (
+                <span
+                  class:list={{ 'is-stage-glyph': index >= 3 && index < 6 }}
+                >
+                  {glyph}
+                </span>
+              ))
+            }
+          </p>
+          <h2
+            id="chapter-2-title"
+            class="burn-reactive"
+            data-burn-target="title"
+          >
+            NATURAL<br />SELECTION
+          </h2>
         </div>
       </section>
 
@@ -130,73 +164,89 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         aria-hidden="true"
         inert
       >
-        <p class="chapter__number" aria-hidden="true">004 / 004</p>
         <div class="chapter__final-copy">
-          <h2 id="chapter-3-title">MADE IN A<br />WAX ATTIC</h2>
-          <a class="shop-link observer-ignore" href="https://waxattic.com/">
-            shop now <span aria-hidden="true">&gt;</span>
-          </a>
+          <p
+            class="chapter__sigil-strip burn-reactive"
+            data-burn-target="sigils"
+            aria-hidden="true"
+          >
+            {
+              stageGlyphs.map((glyph, index) => (
+                <span class:list={{ 'is-stage-glyph': index >= 6 }}>
+                  {glyph}
+                </span>
+              ))
+            }
+          </p>
+          <h2
+            id="chapter-3-title"
+            class="burn-reactive"
+            data-burn-target="title"
+          >
+            MADE IN A<br />WAX ATTIC
+          </h2>
         </div>
+        <a
+          class="shop-link observer-ignore burn-reactive"
+          data-burn-target="shop"
+          href="https://waxattic.com/"
+          aria-hidden="true"
+          tabindex="-1"
+        >
+          <span class="shop-link__label"
+            >shop now <span aria-hidden="true">&gt;</span></span
+          >
+          <span class="shop-link__cover" aria-hidden="true"></span>
+        </a>
       </section>
     </div>
 
-    <nav class="progress observer-ignore" aria-label="Story chapters">
-      <span class="progress__track" aria-hidden="true"
-        ><span class="progress__fill"></span></span
-      >
+    <nav
+      class="progress observer-ignore burn-reactive"
+      data-burn-target="progress"
+      aria-label="Story chapters"
+      aria-hidden="true"
+      inert
+    >
+      <span class="progress__reservoir" aria-hidden="true">
+        <span class="progress__fill"
+          ><i class="progress__bubble progress__bubble--a"></i><i
+            class="progress__bubble progress__bubble--b"></i></span
+        >
+        <span class="progress__meniscus"></span>
+      </span>
       <button
         class="progress__mark is-active"
         type="button"
         data-target="0"
-        aria-label="Second Life"
-        aria-current="step"><span>01</span></button
-      >
+        aria-label="Introduction"
+        aria-current="step"></button>
       <button
         class="progress__mark"
         type="button"
         data-target="1"
-        aria-label="Natural Selection"><span>02</span></button
-      >
+        aria-label="One of One"></button>
       <button
         class="progress__mark"
         type="button"
         data-target="2"
-        aria-label="One of One"><span>03</span></button
-      >
+        aria-label="Natural Selection"></button>
       <button
         class="progress__mark"
         type="button"
         data-target="3"
-        aria-label="Made in a Wax Attic"><span>04</span></button
-      >
+        aria-label="Made in a Wax Attic"></button>
     </nav>
 
     <div id="loadingOverlay" aria-live="polite">
       <div class="boot-panel">
-        <p class="boot-panel__brand">WAX ATTIC / SIGNAL BOOT</p>
         <div class="boot-panel__readout">
-          <span id="loadingStatus">INITIALIZING</span><span
-            id="loadingIndicator"></span><span id="loadingPercent">00%</span
-          ><span class="boot-panel__cursor" aria-hidden="true"></span>
+          <span id="loadingStatus">evolving</span><span id="loadingPercent"
+            >000%</span
+          >
         </div>
         <div class="boot-panel__bar" aria-hidden="true">
           <span id="loadingBarFill"></span>
-        </div>
-        <div class="boot-panel__checks">
-          <span data-load-task="webgl">WEBGL <b data-task-state>WAIT</b></span>
-          <span data-load-task="head"
-            >HEAD MESH <b data-task-state>WAIT</b></span
-          >
-          <span data-load-task="texture"
-            >WAX MAP <b data-task-state>WAIT</b></span
-          >
-          <span data-load-task="signals"
-            >SIGNAL TEXTURES <b data-task-state>WAIT</b></span
-          >
-          <span data-load-task="typeface"
-            >TYPEFACE <b data-task-state>WAIT</b></span
-          >
-          <span data-load-task="video">VIDEO <b data-task-state>WAIT</b></span>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ type Task = (typeof TASKS)[number];
 type TaskState = 'waiting' | 'ready' | 'fallback';
 const MINIMUM_VISIBLE_MS = 900;
 const LOAD_TIMEOUT_MS = 8000;
+const DOT_STEP_MS = 220;
 
 const delay = (milliseconds: number) =>
   new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds));
@@ -82,17 +83,15 @@ const createBootLoader = (root: HTMLElement) => {
   const percent = document.getElementById('loadingPercent');
   const bar = document.getElementById('loadingBarFill');
   const status = document.getElementById('loadingStatus');
-  const rows = new Map(
-    Array.from(root.querySelectorAll<HTMLElement>('[data-load-task]'))
-      .filter((row): row is HTMLElement & { dataset: { loadTask: Task } } =>
-        TASKS.includes(row.dataset.loadTask as Task),
-      )
-      .map((row) => [row.dataset.loadTask, row]),
-  );
   const states = new Map<Task, TaskState>(
     TASKS.map((task) => [task, 'waiting']),
   );
   const startedAt = performance.now();
+  let dots = 0;
+  let dotTimer: number | undefined = window.setInterval(() => {
+    dots = (dots + 1) % 4;
+    if (status) status.textContent = `evolving${'.'.repeat(dots)}`;
+  }, DOT_STEP_MS);
 
   const render = () => {
     const complete = Array.from(states.values()).filter(
@@ -101,21 +100,11 @@ const createBootLoader = (root: HTMLElement) => {
     const value = Math.round((complete / TASKS.length) * 100);
     if (percent) percent.textContent = `${String(value).padStart(3, '0')}%`;
     if (bar) bar.style.width = `${value}%`;
-    rows.forEach((row, task) => {
-      const taskState = states.get(task);
-      if (!taskState) return;
-      row.dataset.state = taskState;
-      const label = row.querySelector<HTMLElement>('[data-task-state]');
-      if (label) {
-        label.dataset.taskState =
-          taskState === 'waiting'
-            ? 'WAIT'
-            : taskState === 'ready'
-              ? 'READY'
-              : 'DEGRADED';
-        label.textContent = label.dataset.taskState;
-      }
-    });
+  };
+
+  const stopDots = () => {
+    window.clearInterval(dotTimer);
+    dotTimer = undefined;
   };
 
   const settle = (task: Task, succeeded = true) => {
@@ -165,7 +154,10 @@ const createBootLoader = (root: HTMLElement) => {
     await delay(
       Math.max(0, MINIMUM_VISIBLE_MS - (performance.now() - startedAt)),
     );
-    if (status) status.textContent = 'READY / ENTERING SYSTEM';
+    stopDots();
+    if (status) status.textContent = 'evolving...';
+    if (percent) percent.textContent = '100%';
+    await delay(DOT_STEP_MS);
     overlay?.classList.add('is-ready');
     await delay(260);
     if (!overlay) return;
@@ -176,7 +168,7 @@ const createBootLoader = (root: HTMLElement) => {
   };
 
   render();
-  return { preload, settle, finish };
+  return { preload, settle, finish, destroy: stopDots };
 };
 
 export default createBootLoader;

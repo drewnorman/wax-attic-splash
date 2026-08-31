@@ -1,0 +1,397 @@
+/* Drag-heat reactions */
+.backdrop,
+.motif-scene,
+.backdrop__sludge,
+.analog-overlay {
+  transition:
+    filter 220ms steps(3, end),
+    opacity 220ms steps(3, end),
+    transform 220ms steps(3, end);
+}
+
+#experience.is-burning[data-chapter='0'] .backdrop {
+  filter: brightness(1.85) saturate(1.8) hue-rotate(-8deg);
+  animation: burn-background-pulse 420ms steps(4, end) infinite alternate;
+}
+
+#experience.is-burning[data-chapter='0'] .backdrop__sludge {
+  filter: brightness(2.1) contrast(1.35);
+  transform: scale(1.12) rotate(-1deg);
+}
+
+#experience.is-burning[data-chapter='1'] .backdrop {
+  filter: brightness(2.05) saturate(2.2) contrast(1.18);
+  animation: burn-background-shear 260ms steps(3, end) infinite alternate;
+}
+
+#experience.is-burning[data-chapter='1'] .signal-tunnel {
+  animation-duration: 620ms;
+  filter: brightness(2.2) saturate(1.6);
+}
+
+#experience.is-burning[data-chapter='1'] .signal-tear {
+  animation-duration: 430ms;
+  height: clamp(0.7rem, 3.4vh, 2.6rem);
+}
+
+#experience.is-burning[data-chapter='2'] .backdrop {
+  filter: brightness(2.35) saturate(2.65) contrast(1.42) hue-rotate(16deg);
+  animation: burn-background-chaos 150ms steps(2, end) infinite;
+}
+
+#experience.is-burning[data-chapter='2'] .motif-scene {
+  filter: brightness(2.2) contrast(1.65);
+  transform: scale(1.055) skewX(-1.8deg);
+}
+
+#experience.is-burning[data-chapter='2'] .analog-overlay {
+  opacity: 1;
+  filter: brightness(1.8) contrast(1.5);
+}
+
+#experience.is-burning[data-chapter='3'] .backdrop {
+  filter: brightness(1.95) saturate(2.35) contrast(1.25) hue-rotate(-18deg);
+  animation: burn-background-pulse 240ms steps(3, end) infinite
+    alternate-reverse;
+}
+
+#experience.is-burning[data-chapter='3'] .attic-portal {
+  filter: brightness(2.5) drop-shadow(0 0 1.8rem #ff1838);
+  animation-duration: 460ms;
+}
+
+.burn-reactive.is-burn-hit[data-burn-target='title'] {
+  animation: burn-title-slice 155ms steps(2, end) infinite alternate;
+  color: #fff5b1;
+  filter: brightness(1.85) contrast(1.3) drop-shadow(0.16rem 0 #ff1f5b)
+    drop-shadow(-0.14rem 0 #e7ff35);
+}
+
+.burn-reactive.is-burn-hit[data-burn-target='sigils'] .is-stage-glyph {
+  color: #fff7a3;
+  animation: burn-sigil-scatter 260ms steps(4, end) infinite alternate;
+  filter: drop-shadow(0 0 0.55rem #ff3518);
+}
+
+.burn-reactive.is-burn-hit[data-burn-target='sigils']
+  .is-stage-glyph:nth-child(3n + 2) {
+  animation-delay: -90ms;
+  animation-direction: alternate-reverse;
+}
+
+.burn-reactive.is-burn-hit[data-burn-target='sigils']
+  .is-stage-glyph:nth-child(3n + 3) {
+  animation-delay: -180ms;
+}
+
+.edge-tape.is-burn-hit {
+  opacity: 0.86;
+  background: #ff6a16 !important;
+  box-shadow: 0 0 1.2rem #ff2914;
+  animation: burn-ticker-wobble 230ms steps(3, end) infinite alternate;
+}
+
+.edge-tape.is-burn-hit .edge-tape__track {
+  animation-duration: 1.65s;
+  animation-direction: reverse;
+}
+
+.progress.is-burn-hit {
+  filter: drop-shadow(0 0 0.7rem #ff2814);
+}
+
+.progress.is-burn-hit::before,
+.progress.is-burn-hit::after {
+  z-index: -3;
+  border: 0;
+  border-radius: 48% 52% 20% 80%;
+  background: linear-gradient(
+    to top,
+    #ff2712 0 35%,
+    #ff9b1b 36% 64%,
+    #fff36b 65% 82%,
+    transparent 83%
+  );
+  box-shadow: 0 0 0.9rem #ff3215;
+  clip-path: polygon(
+    0 100%,
+    7% 53%,
+    26% 72%,
+    42% 12%,
+    58% 67%,
+    78% 34%,
+    100% 100%
+  );
+  animation: progress-fire 180ms steps(3, end) infinite alternate;
+}
+
+.progress.is-burn-hit::before {
+  top: -0.7rem;
+  right: 0.1rem;
+  width: 2.45rem;
+  height: 3rem;
+}
+
+.progress.is-burn-hit::after {
+  right: 0.06rem;
+  bottom: -0.45rem;
+  width: 2.2rem;
+  height: 2.8rem;
+  animation-delay: -90ms;
+}
+
+.progress.is-burn-hit .progress__reservoir {
+  border-color: #ff3520;
+  box-shadow:
+    inset 0 0 0.55rem #ff1911,
+    0 0 0.65rem #ff5b18;
+  animation: progress-border-flash 240ms steps(2, end) infinite alternate;
+}
+
+.progress.is-burn-hit .progress__fill {
+  filter: hue-rotate(285deg) brightness(1.8) saturate(2);
+}
+
+.shop-link.is-burn-hit {
+  color: #fff39c;
+  filter: drop-shadow(0 0 0.38rem #ff3a15) drop-shadow(0 0 1rem #ff174f);
+  animation: burn-shop-hop 180ms steps(3, end) infinite alternate;
+}
+
+.shop-link.is-burn-hit .shop-link__label::after {
+  background: linear-gradient(90deg, #ff2511, #ffad20, #fff578);
+  transform: scaleX(1.08);
+  box-shadow: 0 0 0.55rem #ff3212;
+}
+
+.wax-splatter-field {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wax-splatter-field i {
+  position: absolute;
+  top: 18%;
+  left: 12%;
+  width: clamp(2.5rem, 7vw, 7rem);
+  aspect-ratio: 1.2;
+  border-radius: 43% 57% 62% 38% / 55% 35% 65% 45%;
+  background: radial-gradient(
+    circle at 36% 31%,
+    #ff8291 0 5%,
+    #e5153a 8% 42%,
+    #62041e 72%
+  );
+  box-shadow: 0 0 0.75rem rgb(255 24 56 / 52%);
+  clip-path: polygon(
+    6% 18%,
+    29% 3%,
+    42% 22%,
+    68% 0,
+    78% 28%,
+    100% 42%,
+    78% 58%,
+    92% 91%,
+    59% 77%,
+    40% 100%,
+    28% 72%,
+    0 81%,
+    17% 52%
+  );
+  opacity: 0;
+  transform: scale(0.05) rotate(calc(var(--splat-index) * 19deg));
+}
+
+.wax-splatter-field i:nth-child(2) {
+  left: 35%;
+  top: 8%;
+}
+
+.wax-splatter-field i:nth-child(3) {
+  left: 64%;
+  top: 16%;
+}
+
+.wax-splatter-field i:nth-child(4) {
+  left: 82%;
+  top: 31%;
+}
+
+.wax-splatter-field i:nth-child(5) {
+  left: 8%;
+  top: 55%;
+}
+
+.wax-splatter-field i:nth-child(6) {
+  left: 28%;
+  top: 67%;
+}
+
+.wax-splatter-field i:nth-child(7) {
+  left: 55%;
+  top: 52%;
+}
+
+.wax-splatter-field i:nth-child(8) {
+  left: 76%;
+  top: 71%;
+}
+
+.wax-splatter-field i:nth-child(9) {
+  left: 46%;
+  top: 29%;
+}
+
+.wax-splatter-field i:nth-child(10) {
+  left: 91%;
+  top: 8%;
+}
+
+.wax-splatter-field i:nth-child(11) {
+  left: 17%;
+  top: 36%;
+}
+
+.wax-splatter-field i:nth-child(12) {
+  left: 67%;
+  top: 86%;
+}
+
+.wax-splatter-field i:nth-child(13) {
+  left: 3%;
+  top: 84%;
+}
+
+.wax-splatter-field i:nth-child(14) {
+  left: 88%;
+  top: 56%;
+}
+
+.is-final-splattering .wax-splatter-field i {
+  animation: wax-splat 1.85s steps(8, end) both;
+  animation-delay: calc(var(--splat-index) * 72ms);
+}
+
+.is-head-switching #scene {
+  animation: head-switch-flash 170ms steps(3, end);
+}
+
+@keyframes burn-background-pulse {
+  to {
+    transform: scale(1.025) translate(-0.35rem, 0.2rem);
+  }
+}
+
+@keyframes burn-background-shear {
+  to {
+    transform: scale(1.035) skewX(1.4deg) translate(0.4rem, -0.15rem);
+  }
+}
+
+@keyframes burn-background-chaos {
+  50% {
+    transform: scale(1.045) translate(-0.55rem, 0.2rem);
+  }
+
+  100% {
+    transform: scale(1.025) translate(0.42rem, -0.28rem);
+  }
+}
+
+@keyframes burn-title-slice {
+  to {
+    transform: translate(0.18rem, -0.1rem) skewX(-3deg);
+    text-shadow:
+      -0.22rem 0 #ff1b66,
+      0.2rem 0 #dfff27,
+      0 0 1rem #ff461c;
+  }
+}
+
+@keyframes burn-sigil-scatter {
+  to {
+    transform: translate(calc((var(--splat-index, 1)) * 0.02rem), -0.38rem)
+      rotate(16deg) scale(1.35);
+  }
+}
+
+@keyframes burn-ticker-wobble {
+  to {
+    transform: rotate(-89deg) translateY(0.22rem) skewX(3deg);
+  }
+}
+
+@keyframes progress-fire {
+  to {
+    transform: translateY(-0.35rem) scaleX(0.84) rotate(4deg);
+    filter: brightness(1.45);
+  }
+}
+
+@keyframes progress-border-flash {
+  to {
+    border-color: #fff38a;
+    box-shadow:
+      inset 0 0 0.8rem #ff1a0d,
+      0 0 1.2rem #ffb21f;
+  }
+}
+
+@keyframes burn-shop-hop {
+  to {
+    transform: translate(-0.12rem, -0.32rem) rotate(-3deg) scale(1.05);
+  }
+}
+
+@keyframes wax-splat {
+  0% {
+    opacity: 0;
+    transform: scale(0.05) rotate(calc(var(--splat-index) * 19deg));
+  }
+
+  22%,
+  68% {
+    opacity: 0.88;
+    transform: scale(1) rotate(calc(var(--splat-index) * 19deg));
+  }
+
+  82% {
+    opacity: 0.58;
+    transform: scale(1.06, 1.28) translateY(0.8rem)
+      rotate(calc(var(--splat-index) * 19deg));
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.96, 1.52) translateY(2.2rem)
+      rotate(calc(var(--splat-index) * 19deg));
+  }
+}
+
+@keyframes head-switch-flash {
+  50% {
+    opacity: 0.22;
+    filter: brightness(2.5) hue-rotate(95deg) contrast(2);
+    transform: translateX(0.65rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #experience.is-burning .backdrop,
+  #experience.is-burning .motif-scene,
+  .burn-reactive.is-burn-hit,
+  .burn-reactive.is-burn-hit .is-stage-glyph,
+  .progress.is-burn-hit::before,
+  .progress.is-burn-hit::after,
+  .is-head-switching #scene {
+    animation: none;
+    transform: none;
+  }
+
+  .wax-splatter-field {
+    display: none;
+  }
+}

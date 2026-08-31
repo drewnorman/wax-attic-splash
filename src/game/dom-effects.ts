@@ -3,7 +3,9 @@ import { gsap } from 'gsap';
 export const createTextFlicker = (chapters: HTMLElement[]) =>
   chapters.map((chapter, index) => {
     const targets = Array.from(
-      chapter.querySelectorAll('.chapter__number, h1, h2'),
+      chapter.querySelectorAll(
+        '.chapter__sigil-strip, h1:not(.visually-hidden), h2',
+      ),
     );
     const strength = [0.35, 0.58, 1, 0.22][index];
     const leadIn = [3.4, 2.7, 1.35, 5.8][index];
@@ -81,6 +83,48 @@ export const createSceneStutter = (root: HTMLElement) => {
       delayedCall?.kill();
       window.clearTimeout(releaseTimer);
       root.classList.remove('is-stuttering');
+    },
+  };
+};
+
+export const createShopReveal = (link: HTMLAnchorElement | null) => {
+  let timer: number | undefined;
+  let reducedMotion = false;
+  const reset = () => {
+    window.clearTimeout(timer);
+    timer = undefined;
+    link?.classList.remove('is-revealing', 'is-revealed');
+    link?.setAttribute('aria-hidden', 'true');
+    link?.setAttribute('tabindex', '-1');
+  };
+  const reveal = () => {
+    if (!link) return;
+    link.setAttribute('aria-hidden', 'false');
+    link.removeAttribute('tabindex');
+    if (reducedMotion) link.classList.add('is-revealed');
+    else link.classList.add('is-revealing');
+  };
+  const activate = () => {
+    reset();
+    if (reducedMotion) reveal();
+    else timer = window.setTimeout(reveal, 1900);
+  };
+  const onAnimationEnd = (event: AnimationEvent) => {
+    if (event.animationName !== 'shop-signal-lock') return;
+    link?.classList.remove('is-revealing');
+    link?.classList.add('is-revealed');
+  };
+  link?.addEventListener('animationend', onAnimationEnd);
+  reset();
+  return {
+    activate,
+    reset,
+    setReducedMotion: (active: boolean) => {
+      reducedMotion = active;
+    },
+    destroy: () => {
+      reset();
+      link?.removeEventListener('animationend', onAnimationEnd);
     },
   };
 };

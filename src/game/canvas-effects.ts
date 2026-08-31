@@ -84,6 +84,7 @@ export const createOverlayParticles = (
 export const createBurnLayer = (
   scarCanvas: Element | null,
   smokeCanvas: Element | null,
+  root: HTMLElement,
 ) => {
   if (
     !(scarCanvas instanceof HTMLCanvasElement) ||
@@ -128,8 +129,15 @@ export const createBurnLayer = (
     scarContext.translate(x, y);
     scarContext.rotate(stamp.rotation * 0.12);
     const shrinkingRadius = radius * (1 - progress * 0.46);
-    const palette = ['#ff3212', '#ff7417', '#ffc928', '#fff39a'];
-    for (let tongue = 0; tongue < 5; tongue += 1) {
+    const palettes = [
+      ['#35ff18', '#baff27', '#f4ff61', '#ffffff'],
+      ['#ff2a62', '#ff6d12', '#ffe33a', '#ffffff'],
+      ['#ff1694', '#ff4bd8', '#dcff24', '#ffffff'],
+      ['#7d20ff', '#ff1838', '#ff7a18', '#fff0b2'],
+    ];
+    const palette =
+      palettes[Number(root?.dataset?.chapter) || 0] || palettes[0];
+    for (let tongue = 0; tongue < 7; tongue += 1) {
       const tongueSeed = stamp.seed + tongue * 7.31;
       const baseX = (tongue - 2) * shrinkingRadius * 0.29;
       const height =
@@ -199,7 +207,7 @@ export const createBurnLayer = (
     const stamp = {
       x: THREE.MathUtils.clamp(clientX / width, 0, 1),
       y: THREE.MathUtils.clamp(clientY / height, 0, 1),
-      radius: 13 + pressure * 17 + Math.random() * 7,
+      radius: 22 + pressure * 28 + Math.random() * 12,
       rotation: Math.random() * Math.PI,
       seed: Math.random() * 20,
       createdAt: performance.now(),
@@ -208,15 +216,15 @@ export const createBurnLayer = (
     if (stamps.length > 700) stamps.shift();
     drawStamp(stamp, 0);
     if (!reducedMotion) {
-      for (let index = 0; index < 3 && smoke.length < 140; index += 1) {
+      for (let index = 0; index < 6 && smoke.length < 240; index += 1) {
         smoke.push({
           x: clientX + (Math.random() - 0.5) * stamp.radius,
           y: clientY + (Math.random() - 0.5) * stamp.radius * 0.4,
           vx: (Math.random() - 0.5) * 12,
-          vy: -18 - Math.random() * 34,
+          vy: -28 - Math.random() * 58,
           life: 0.7 + Math.random() * 0.75,
           age: 0,
-          size: 8 + Math.random() * 18,
+          size: 16 + Math.random() * 30,
         });
       }
     }

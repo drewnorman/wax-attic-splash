@@ -5,6 +5,12 @@
   overflow: hidden;
   background: #030504;
   touch-action: none;
+  user-select: none;
+}
+
+#experience img,
+#experience video {
+  -webkit-user-drag: none;
 }
 
 @media (pointer: fine) {
@@ -213,21 +219,10 @@
   display: block;
 }
 
-.edge-tape--right .edge-tape__track {
-  animation-direction: reverse;
-  animation-duration: 11s;
-}
-
 .edge-tape--left {
   top: 22%;
   left: -7rem;
   transform: rotate(-90deg);
-}
-
-.edge-tape--right {
-  right: -8rem;
-  bottom: 24%;
-  transform: rotate(90deg);
 }
 
 #experience[data-chapter='1'] .edge-tape {

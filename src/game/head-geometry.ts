@@ -69,6 +69,50 @@ const fitHeadReference = (geometry: THREE.BufferGeometry) => {
   return fitted;
 };
 
+const trimHeadAtJaw = (geometry: THREE.BufferGeometry) => {
+  const source = geometry.index ? geometry.toNonIndexed() : geometry.clone();
+  const position = source.getAttribute('position');
+  const kept: number[] = [];
+  for (let index = 0; index < position.count; index += 3) {
+    let keep = true;
+    for (let corner = 0; corner < 3; corner += 1) {
+      const vertex = index + corner;
+      const x = position.getX(vertex);
+      const y = position.getY(vertex);
+      const z = position.getZ(vertex);
+      const cutoff =
+        -1.12 +
+        Math.sin(x * 10.7 + Math.sin(z * 8.3) * 1.8) * 0.052 +
+        Math.sin(z * 15.1 - x * 4.6) * 0.026;
+      if (y < cutoff) keep = false;
+    }
+    if (keep) kept.push(index, index + 1, index + 2);
+  }
+  const trimmed = new THREE.BufferGeometry();
+  Object.entries(source.attributes).forEach(([name, attribute]) => {
+    const values = new Float32Array(kept.length * attribute.itemSize);
+    kept.forEach((sourceIndex, outputIndex) => {
+      for (let component = 0; component < attribute.itemSize; component += 1) {
+        values[outputIndex * attribute.itemSize + component] =
+          attribute.array[sourceIndex * attribute.itemSize + component];
+      }
+    });
+    trimmed.setAttribute(
+      name,
+      new THREE.BufferAttribute(
+        values,
+        attribute.itemSize,
+        attribute.normalized,
+      ),
+    );
+  });
+  source.dispose();
+  trimmed.computeVertexNormals();
+  trimmed.computeBoundingBox();
+  trimmed.computeBoundingSphere();
+  return trimmed;
+};
+
 const createCleanMorphGeometry = (
   sourceGeometry: THREE.BufferGeometry | null = null,
   segments = 14,
@@ -176,7 +220,7 @@ export const loadMorphGeometry = async () => {
 
 export const loadHeadGeometry = async () => {
   const sourceGeometry = await loadHeadSourceGeometry();
-  const geometry = fitHeadReference(sourceGeometry);
+  const geometry = trimHeadAtJaw(fitHeadReference(sourceGeometry));
   if (!geometry.getAttribute('uv')) {
     const positions = geometry.getAttribute('position');
     geometry.setAttribute(

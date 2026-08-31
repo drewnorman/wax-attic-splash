@@ -35,7 +35,7 @@
 
   .chapter h1,
   .chapter h2 {
-    font-size: clamp(2.5rem, 15vw, 4.8rem);
+    font-size: clamp(2.1rem, 12.5vw, 4rem);
   }
 
   .chapter--final {
@@ -44,15 +44,13 @@
   }
 
   .chapter__final-copy {
-    width: 100%;
+    width: calc(100% - 2.6rem);
   }
 
   .shop-link {
-    margin-top: 1.4rem;
-  }
-
-  .boot-panel__checks {
-    grid-template-columns: 1fr;
+    right: 3.6rem;
+    bottom: max(8.2rem, calc(env(safe-area-inset-bottom) + 7rem));
+    font-size: 1.2rem;
   }
 }
 
@@ -83,11 +81,53 @@
   .warning-ring,
   .attic-portal,
   .edge-tape__track,
-  .boot-panel__cursor {
+  .progress__fill,
+  .progress__fill::before,
+  .progress__meniscus,
+  .progress__reservoir::before,
+  .progress__reservoir::after {
+    animation: none;
+    transition: none;
+  }
+
+  .progress__bubble,
+  .chapter__sigil-strip .is-stage-glyph {
     animation: none;
   }
 
+  #experience.is-introduced .scroll-cue {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    animation: none;
+  }
+
+  .boot-panel {
+    animation: none;
+    background-image: none;
+  }
+
+  .boot-panel::after {
+    display: none;
+  }
+
   #loadingOverlay.is-ready .boot-panel {
+    animation: none;
+  }
+
+  .shop-link.is-revealing {
+    opacity: 1;
+    transform: rotate(-1.5deg);
+    animation: none;
+  }
+
+  .shop-link.is-revealing .shop-link__label::after {
+    transform: scaleX(1);
+    animation: none;
+  }
+
+  .shop-link.is-revealing .shop-link__cover {
+    display: none;
     animation: none;
   }
 }

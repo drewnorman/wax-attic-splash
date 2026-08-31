@@ -5,7 +5,11 @@ import { CHAPTERS } from './state';
 import type { Point, TouchOrigin } from './state';
 import { createOverlayParticles, createBurnLayer } from './canvas-effects';
 import { createRenderer } from './renderer';
-import { createTextFlicker, createSceneStutter } from './dom-effects';
+import {
+  createTextFlicker,
+  createSceneStutter,
+  createShopReveal,
+} from './dom-effects';
 
 gsap.registerPlugin(Observer);
 
@@ -24,8 +28,12 @@ const createExperience = async () => {
   const bootLoader = createBootLoader(root);
   const preloadPromise = bootLoader.preload();
   const chapters = Array.from(root.querySelectorAll<HTMLElement>('.chapter'));
+  const progressNav = root.querySelector('.progress');
   const progressMarks = Array.from(
     root.querySelectorAll<HTMLButtonElement>('.progress__mark'),
+  );
+  const shopReveal = createShopReveal(
+    root.querySelector<HTMLAnchorElement>('.shop-link'),
   );
   const scrollCue = document.getElementById('scrollCue');
   const state = { ...CHAPTERS[0] };
@@ -36,7 +44,7 @@ const createExperience = async () => {
     state,
     ambient,
   );
-  const burnController = createBurnLayer(burnCanvas, smokeCanvas);
+  const burnController = createBurnLayer(burnCanvas, smokeCanvas, root);
   const stutterController = createSceneStutter(root);
   const media = gsap.matchMedia();
   let reducedMotion = false;
@@ -47,6 +55,10 @@ const createExperience = async () => {
   let touchOrigin: TouchOrigin | null = null;
   let lastBurnPoint: Point | null = null;
   let cooldownTimer: number | undefined;
+  const burnReactive = Array.from(
+    root.querySelectorAll<HTMLElement>('.burn-reactive'),
+  );
+  const burnReleaseTimers = new Map<HTMLElement, number>();
   let rendererController: Awaited<ReturnType<typeof createRenderer>> | null =
     null;
   try {
@@ -81,8 +93,18 @@ const createExperience = async () => {
       if (active) mark.setAttribute('aria-current', 'step');
       else mark.removeAttribute('aria-current');
     });
+    if (progressNav instanceof HTMLElement) {
+      const hidden = index === 0;
+      progressNav.setAttribute('aria-hidden', String(hidden));
+      progressNav.inert = hidden;
+    }
   };
 
+  const clearBurnHits = () => {
+    burnReleaseTimers.forEach((timer) => window.clearTimeout(timer));
+    burnReleaseTimers.clear();
+    burnReactive.forEach((element) => element.classList.remove('is-burn-hit'));
+  };
   const goTo = (nextIndex: number) => {
     if (
       transitioning ||
@@ -92,6 +114,8 @@ const createExperience = async () => {
     )
       return;
     transitioning = true;
+    clearBurnHits();
+    shopReveal.reset();
     observer?.disable();
     window.clearTimeout(cooldownTimer);
     const previous = chapters[activeIndex];
@@ -100,6 +124,10 @@ const createExperience = async () => {
     const duration = reducedMotion ? 0.24 : TRANSITION_DURATION;
     const targetState = CHAPTERS[nextIndex];
     root.dataset.chapter = String(nextIndex);
+    if (nextIndex > 0 && progressNav instanceof HTMLElement) {
+      progressNav.removeAttribute('inert');
+      progressNav.setAttribute('aria-hidden', 'false');
+    }
     rendererController?.setChapter(nextIndex);
     next.classList.add('is-active');
     next.removeAttribute('inert');
@@ -118,6 +146,7 @@ const createExperience = async () => {
         gsap.set(previous, { autoAlpha: 0, yPercent: 0 });
         setAccessibilityState(activeIndex);
         transitioning = false;
+        if (activeIndex === 3) shopReveal.activate();
         cooldownTimer = window.setTimeout(
           () => observer?.enable(),
           MOMENTUM_COOLDOWN,
@@ -196,23 +225,21 @@ const createExperience = async () => {
         '--glow-scale': reducedMotion ? 1 : targetState.glowScale,
         '--grain-opacity': targetState.grainOpacity,
         '--backdrop-hue': targetState.hue,
-        '--story-progress': nextIndex / (chapters.length - 1),
       },
       0,
     );
-    const finalLink = next.querySelector('.shop-link');
-    if (finalLink)
-      timeline.fromTo(
-        finalLink,
-        { autoAlpha: 0, y: reducedMotion ? 0 : 16 },
-        {
-          autoAlpha: 1,
-          y: 0,
-          duration: reducedMotion ? 0.18 : 0.42,
-          ease: 'power2.out',
-        },
-        reducedMotion ? 0.08 : duration * 0.74,
-      );
+    const progress = nextIndex === 0 ? 0 : nextIndex / (chapters.length - 1);
+    timeline.to(
+      root,
+      {
+        '--story-progress': progress,
+        '--story-clip': `${progress * 100}%`,
+        '--story-meniscus': `${progress * 100}%`,
+        duration: reducedMotion ? 0.12 : 0.72,
+        ease: 'power2.inOut',
+      },
+      nextIndex > 0 && activeIndex === 0 ? 0.28 : 0,
+    );
   };
 
   const observer = Observer.create({
@@ -233,11 +260,38 @@ const createExperience = async () => {
   const burnAt = (clientX: number, clientY: number, pressure = 0.7) => {
     if (
       lastBurnPoint &&
-      Math.hypot(clientX - lastBurnPoint.x, clientY - lastBurnPoint.y) < 8
+      Math.hypot(clientX - lastBurnPoint.x, clientY - lastBurnPoint.y) < 4
     )
       return;
     lastBurnPoint = { x: clientX, y: clientY };
     burnController.add(clientX, clientY, pressure || 0.7);
+    rendererController?.setBurnPoint(clientX, clientY);
+    burnReactive.forEach((element) => {
+      if (
+        !(element instanceof HTMLElement) ||
+        !element.closest('.is-active, .foreground-motifs, .progress')
+      )
+        return;
+      const rect = element.getBoundingClientRect();
+      if (
+        clientX < rect.left ||
+        clientX > rect.right ||
+        clientY < rect.top ||
+        clientY > rect.bottom
+      )
+        return;
+      element.classList.add('is-burn-hit');
+      const existing = burnReleaseTimers.get(element);
+      if (existing) window.clearTimeout(existing);
+      const duration = element.dataset.burnTarget === 'progress' ? 3200 : 620;
+      burnReleaseTimers.set(
+        element,
+        window.setTimeout(() => {
+          element.classList.remove('is-burn-hit');
+          burnReleaseTimers.delete(element);
+        }, duration),
+      );
+    });
   };
   const onPointerMove = (event: PointerEvent) => {
     root.style.setProperty('--cursor-x', `${event.clientX}px`);
@@ -294,7 +348,7 @@ const createExperience = async () => {
           reducedMotion,
         );
         rendererController?.setSlowMotion(true);
-        rendererController?.setBurning(true);
+        rendererController?.setBurning(true, event.pressure || 0.7);
         root.classList.add('is-inspecting', 'is-burning');
         burnAt(touchOrigin.x, touchOrigin.y, event.pressure);
       }, 440);
@@ -305,7 +359,7 @@ const createExperience = async () => {
     root.setPointerCapture?.(event.pointerId);
     rendererController?.setPointer(event.clientX, event.clientY, reducedMotion);
     rendererController?.setSlowMotion(true);
-    rendererController?.setBurning(true);
+    rendererController?.setBurning(true, event.pressure || 0.7);
     root.classList.add('is-inspecting', 'is-burning');
     burnAt(event.clientX, event.clientY, event.pressure);
   };
@@ -357,6 +411,7 @@ const createExperience = async () => {
       goTo(chapters.length - 1);
     }
   };
+  const preventNativeDrag = (event: Event) => event.preventDefault();
   const onResize = () => {
     rendererController?.resize();
     overlayController.resize();
@@ -376,12 +431,15 @@ const createExperience = async () => {
   root.addEventListener('pointercancel', releaseInspection);
   root.addEventListener('pointerleave', onPointerLeave);
   root.addEventListener('pointerenter', onPointerEnter);
+  root.addEventListener('selectstart', preventNativeDrag);
+  root.addEventListener('dragstart', preventNativeDrag);
   scrollCue?.addEventListener('click', onScrollCueClick);
   progressMarks.forEach((mark) =>
     mark.addEventListener('click', onProgressClick),
   );
   media.add('(prefers-reduced-motion: reduce)', () => {
     reducedMotion = true;
+    shopReveal.setReducedMotion(true);
     rendererController?.setReducedMotion(true);
     overlayController.setReducedMotion(true);
     burnController.setReducedMotion(true);
@@ -408,6 +466,7 @@ const createExperience = async () => {
     });
     return () => {
       reducedMotion = false;
+      shopReveal.setReducedMotion(false);
       rendererController?.setReducedMotion(false);
       overlayController.setReducedMotion(false);
       burnController.setReducedMotion(false);
@@ -423,6 +482,7 @@ const createExperience = async () => {
     window.requestAnimationFrame(() => resolve()),
   );
   await bootLoader.finish();
+  root.classList.add('is-introduced');
   const destroy = () => {
     window.clearTimeout(cooldownTimer);
     window.clearTimeout(touchHoldTimer);
@@ -436,6 +496,8 @@ const createExperience = async () => {
     root.removeEventListener('pointercancel', releaseInspection);
     root.removeEventListener('pointerleave', onPointerLeave);
     root.removeEventListener('pointerenter', onPointerEnter);
+    root.removeEventListener('selectstart', preventNativeDrag);
+    root.removeEventListener('dragstart', preventNativeDrag);
     scrollCue?.removeEventListener('click', onScrollCueClick);
     progressMarks.forEach((mark) =>
       mark.removeEventListener('click', onProgressClick),
@@ -446,6 +508,9 @@ const createExperience = async () => {
     overlayController.destroy();
     burnController.destroy();
     stutterController.destroy();
+    shopReveal.destroy();
+    clearBurnHits();
+    bootLoader.destroy();
     rendererController?.destroy();
   };
   return { goTo, resize: onResize, destroy };
