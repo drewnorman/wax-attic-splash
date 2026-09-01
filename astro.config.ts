@@ -9,7 +9,6 @@ export default defineConfig({
   vite: forceHttpDev
     ? {
         server: {
-          https: false,
           hmr: {
             protocol: 'ws',
           },

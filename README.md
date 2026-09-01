@@ -41,7 +41,8 @@ stay on plain HTTP locally.
 ## Scripts
 
 - `yarn dev` starts Astro locally.
-- `yarn build` runs `astro check` and writes the static site to `dist/`.
+- `yarn build` runs Astro's strict TypeScript checks and writes the static site
+  to `dist/`.
 - `yarn preview` serves the built site locally.
 - `yarn podman:dev` starts the Podman Compose local dev service.
 - `yarn firebase:preview` deploys a temporary channel on the staging Hosting site.

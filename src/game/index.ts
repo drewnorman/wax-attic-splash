@@ -45,7 +45,7 @@ const finishLoading = () => {
 const Game = () => {
   const canvas = document.getElementById('game');
 
-  if (!canvas) return;
+  if (!(canvas instanceof HTMLCanvasElement)) return;
 
   const engine = new Engine(canvas);
   const scene = new Scene(engine);
@@ -54,7 +54,9 @@ const Game = () => {
 
   showSpinner();
 
-  window.onresize = () => engine.resize();
+  window.onresize = () => {
+    engine.resize();
+  };
 
   const mainCamera = new ArcRotateCamera(
     'mainCamera',
@@ -66,9 +68,12 @@ const Game = () => {
   );
   mainCamera.lowerRadiusLimit = 9;
   mainCamera.upperRadiusLimit = 9;
-  mainCamera.attachControl(canvas, true);
+  mainCamera.attachControl(
+    canvas as unknown as Parameters<typeof mainCamera.attachControl>[0],
+    true,
+  );
 
-  if (scene.activeCameras.length === 0) {
+  if (scene.activeCameras.length === 0 && scene.activeCamera) {
     scene.activeCameras.push(scene.activeCamera);
   }
 
@@ -82,7 +87,12 @@ const Game = () => {
 
   const cubeMaterial = new StandardMaterial('cubeMaterial', scene);
   const cubeTextureSize = 1500;
-  const cubeTexture = new DynamicTexture('cubeTexture', cubeTextureSize, scene);
+  const cubeTexture = new DynamicTexture(
+    'cubeTexture',
+    cubeTextureSize,
+    scene,
+    false,
+  );
   const context = cubeTexture.getContext();
   cubeMaterial.diffuseTexture = cubeTexture;
   cubeMaterial.specularTexture = cubeTexture;
@@ -97,7 +107,7 @@ const Game = () => {
     cubeTexture.update();
   };
 
-  const box = new Mesh.CreateBox('box', 2, scene);
+  const box = Mesh.CreateBox('box', 2, scene);
   box.rotation.x = -0.2;
   box.rotation.y = -0.4;
   box.material = cubeMaterial;
@@ -105,13 +115,13 @@ const Game = () => {
   box.convertToUnIndexedMesh();
 
   for (let i = 0; i < 20; i += 1) {
-    ParticleHelper.CreateAsync('fire', scene).then((set) => {
+    void ParticleHelper.CreateAsync('fire', scene).then((set) => {
       set.start();
       set.systems.forEach((system) => {
-        /* eslint-disable no-param-reassign */
-        system.worldOffset = new Vector3(i * 2 - 3, 0, 0);
+        if ('worldOffset' in system) {
+          system.worldOffset = new Vector3(i * 2 - 3, 0, 0);
+        }
         system.layerMask = 0x20000000;
-        /* eslint-enable no-param-reassign */
       });
     });
   }
@@ -127,14 +137,16 @@ const Game = () => {
       context.clearRect(0, 0, cubeTextureSize, cubeTextureSize);
       context.drawImage(image, 0, 0);
       context.globalCompositeOperation = 'multiply';
-      context.fillStyle = `hsl(${hue}, 100%, 50%)`;
+      context.fillStyle = `hsl(${String(hue)}, 100%, 50%)`;
       context.fillRect(0, 0, cubeTextureSize, cubeTextureSize);
       context.globalCompositeOperation = 'source-over';
       cubeTexture.update();
 
       scene.render();
     });
-    setTimeout(() => finishLoading(), 400);
+    setTimeout(() => {
+      finishLoading();
+    }, 400);
   });
 };
 
