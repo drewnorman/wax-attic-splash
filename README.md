@@ -15,7 +15,8 @@ yarn install
 yarn dev
 ```
 
-The Nix flake provides Node, Yarn, Firebase CLI, Google Cloud CLI, and OpenTofu.
+The project requires Node.js 24.16 or newer within the Node 24 release line. The
+Nix flake provides Node, Yarn, Firebase CLI, Google Cloud CLI, and OpenTofu.
 
 For Podman-based development:
 
@@ -43,6 +44,10 @@ stay on plain HTTP locally.
 - `yarn dev` starts Astro locally.
 - `yarn build` runs Astro's strict TypeScript checks and writes the static site
   to `dist/`.
+- `yarn lint` checks TypeScript, Astro components, CSS, and formatting.
+- `yarn format` formats supported source and configuration files and fixes CSS
+  lint issues where possible.
+- `yarn test` runs the complete lint and production-build gate.
 - `yarn preview` serves the built site locally.
 - `yarn podman:dev` starts the Podman Compose local dev service.
 - `yarn firebase:preview` deploys a temporary channel on the staging Hosting site.

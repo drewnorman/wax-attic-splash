@@ -1,6 +1,6 @@
 :root {
   --color-primary: #0fed19;
-  --color-black: #000000;
+  --color-black: #000;
   --color-loading: #323232;
   --font-body: 'Anonymous Pro', sans-serif;
 }
@@ -85,7 +85,7 @@ canvas {
   width: 100%;
 }
 
-@media screen and (min-width: 992px) {
+@media screen and (width >= 992px) {
   #enterSite {
     top: 10%;
   }

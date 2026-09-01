@@ -3,7 +3,7 @@ name: Firebase Production
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
 
 permissions:
   contents: read

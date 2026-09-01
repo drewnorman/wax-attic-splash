@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 
 networks:
   local:
@@ -11,13 +11,13 @@ services:
     restart: unless-stopped
     working_dir: /workspace
     environment:
-      ASTRO_TELEMETRY_DISABLED: "1"
-      LOCAL_DEV_HTTP: "1"
-      PUBLIC_SITE_URL: "http://site.wax-attic-splash.localhost"
+      ASTRO_TELEMETRY_DISABLED: '1'
+      LOCAL_DEV_HTTP: '1'
+      PUBLIC_SITE_URL: 'http://site.wax-attic-splash.localhost'
     command: >
       sh -lc "node_modules/.bin/astro dev --host 0.0.0.0 --port 4321"
     expose:
-      - "4321"
+      - '4321'
     labels:
       - traefik.enable=true
       - traefik.docker.network=local-proxy

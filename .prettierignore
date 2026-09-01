@@ -1,0 +1,9 @@
+.astro/
+dist/
+node_modules/
+public/
+terraform/
+flake.lock
+flake.nix
+yarn.lock
+CHANGELOG.md

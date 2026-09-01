@@ -3,7 +3,7 @@ name: Firebase Staging
 on:
   push:
     tags:
-      - "v*-rc*"
+      - 'v*-rc*'
 
 permissions:
   contents: read
