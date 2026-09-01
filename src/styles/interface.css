@@ -1,0 +1,210 @@
+.burn-cursor {
+  position: fixed;
+  z-index: 40;
+  top: 0;
+  left: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid rgb(174 255 181 / 72%);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(var(--cursor-x), var(--cursor-y), 0)
+    translate(-50%, -50%);
+  transition:
+    width 120ms steps(2, end),
+    height 120ms steps(2, end),
+    border-color 120ms,
+    opacity 120ms;
+}
+
+.burn-cursor::before,
+.burn-cursor::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: currentcolor;
+  content: '';
+  transform: translate(-50%, -50%);
+}
+
+.burn-cursor::before {
+  width: 2.2rem;
+  height: 1px;
+}
+
+.burn-cursor::after {
+  width: 1px;
+  height: 2.2rem;
+}
+
+.burn-cursor span {
+  position: absolute;
+  inset: 0.36rem;
+  border: 1px solid currentcolor;
+  border-radius: 50%;
+}
+
+.is-cursor-visible .burn-cursor {
+  opacity: 0.88;
+}
+
+.is-cursor-interactive .burn-cursor {
+  width: 1rem;
+  height: 1rem;
+  color: #fff;
+}
+
+.is-burning .burn-cursor {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-color: #ff5d12;
+  color: #ff9b31;
+  filter: drop-shadow(0 0 0.5rem #ff3b09);
+  animation: cursor-burn 0.16s steps(2, end) infinite;
+}
+
+#experience.is-stuttering #scene,
+#experience.is-stuttering .motif-scene,
+#experience.is-stuttering .chapter.is-active {
+  opacity: 0.18;
+  filter: hue-rotate(70deg) contrast(1.8);
+  transform: translate3d(-0.55rem, 0.12rem, 0) scaleX(1.018);
+}
+
+#experience.is-final-sequence .analog-overlay {
+  opacity: calc(0.24 + var(--final-chaos, 0) * 0.42);
+  transition-duration: 90ms;
+}
+
+#experience.is-final-raining .analog-overlay__tear,
+#experience.is-final-snowing .analog-overlay__tear {
+  opacity: calc(0.42 + var(--final-chaos, 0) * 0.34);
+  animation-duration: 1.7s;
+}
+
+#experience.is-final-exploding #scene,
+#experience.is-final-reassembling #scene {
+  filter: contrast(calc(1.08 + var(--final-chaos, 0) * 0.38))
+    saturate(calc(1 + var(--final-chaos, 0) * 0.5));
+}
+
+#experience.is-final-exploding .analog-overlay__rgb,
+#experience.is-final-reassembling .analog-overlay__rgb {
+  opacity: 0.82;
+  animation-duration: 0.42s;
+}
+
+#experience.is-final-exploding .analog-overlay__noise,
+#experience.is-final-reassembling .analog-overlay__noise {
+  opacity: 0.46;
+  animation-duration: 0.18s;
+}
+
+#experience[data-chapter='2'] .progress__reservoir {
+  border-color: rgb(190 255 194 / 42%);
+}
+
+.scroll-cue:focus-visible,
+.shop-link:focus-visible,
+.progress__mark:focus-visible {
+  outline: 2px solid #e5ffe5;
+  outline-offset: 4px;
+}
+
+#loadingOverlay {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 50%, #20241f, #0b0e0c 68%);
+  transition:
+    opacity 180ms steps(2, end),
+    visibility 180ms steps(2, end);
+}
+
+#loadingOverlay[hidden] {
+  display: none;
+}
+
+.boot-panel {
+  position: relative;
+  width: min(17rem, calc(100vw - 2.5rem));
+  box-sizing: border-box;
+  padding: 0.9rem 1rem 0.85rem;
+  border: 1px solid #66816a;
+  color: #c9e1cb;
+  background:
+    repeating-linear-gradient(
+      115deg,
+      rgb(78 112 76 / 10%) 0 1px,
+      transparent 1px 7px
+    ),
+    #0b0e0c;
+  box-shadow:
+    0.38rem 0.42rem 0 #030403,
+    inset 0 0 1.4rem rgb(25 255 70 / 4%);
+  text-align: left;
+  transform: rotate(-0.7deg);
+  animation: boot-jitter 1.4s steps(2, end) infinite;
+}
+
+.boot-panel::after {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 3px,
+    rgb(172 255 185 / 4%) 4px
+  );
+  content: '';
+  pointer-events: none;
+}
+
+.boot-panel__readout {
+  display: flex;
+  min-height: 1.4rem;
+  align-items: center;
+  color: #b5d2b8;
+  font-size: 0.82rem;
+  text-transform: lowercase;
+}
+
+#loadingPercent {
+  margin-left: auto;
+  color: #0fed19;
+  font-weight: 900;
+}
+
+.boot-panel__bar {
+  height: 0.42rem;
+  margin: 0.65rem 0 0;
+  border: 1px solid #465a49;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 8%,
+    rgb(128 151 132 / 22%) 8% 10%
+  );
+}
+
+#loadingBarFill {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    #0fed19 0 8%,
+    transparent 8% 10%
+  );
+  filter: drop-shadow(0 0 0.35rem #0fed19);
+  transition: width 180ms steps(10);
+}
+
+#loadingOverlay.is-ready .boot-panel {
+  animation: boot-release 260ms steps(3, end) both;
+}
+
+#experience.is-fallback #scene {
+  display: none;
+}

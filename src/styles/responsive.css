@@ -1,0 +1,225 @@
+@media screen and (width <= 720px) {
+  .bio-smear {
+    width: 62vw;
+    opacity: 0.36;
+  }
+
+  .wax-wall {
+    width: 70vw;
+    font-size: 17vw;
+  }
+
+  .skull-strip {
+    left: -25%;
+    width: 150%;
+    opacity: 0.42;
+  }
+
+  .attic-portal {
+    width: 104vw;
+    opacity: 0.72;
+  }
+
+  .attic-mark {
+    top: 10%;
+  }
+
+  .edge-tape {
+    opacity: 0.16;
+  }
+
+  .chapter {
+    padding-right: 3.8rem;
+    padding-bottom: max(1.4rem, env(safe-area-inset-bottom));
+  }
+
+  .chapter[data-index='0'] {
+    padding-right: 1.35rem;
+  }
+
+  .chapter h1,
+  .chapter h2 {
+    font-size: clamp(2.1rem, 12.5vw, 4rem);
+  }
+
+  .chapter[data-index='1'] h2 {
+    font-size: clamp(1.2rem, 5.8vw, 2rem);
+  }
+
+  .chapter[data-index='2'] h2 {
+    font-size: clamp(1.48rem, 7.15vw, 2.5rem);
+  }
+
+  .chapter[data-index='3'] h2 {
+    font-size: clamp(1.05rem, 5.25vw, 1.78rem);
+  }
+
+  .chapter--final {
+    align-content: end;
+    justify-items: start;
+  }
+
+  .chapter__final-copy {
+    width: calc(100% - 2.6rem);
+  }
+
+  .shop-link {
+    right: 3.6rem;
+    bottom: max(8.2rem, calc(env(safe-area-inset-bottom) + 7rem));
+    font-size: 1.7rem;
+  }
+
+  .stage-indicator {
+    left: 1.35rem;
+    bottom: calc(
+      max(1.4rem, env(safe-area-inset-bottom)) +
+        clamp(3.3rem, 19.5vw, 6.25rem) + 1.1rem
+    );
+    max-width: calc(100vw - 5.6rem);
+    gap: clamp(0.26rem, 1.25vw, 0.52rem);
+    font-size: clamp(1rem, 4.8vw, 1.35rem);
+  }
+
+  .stage-progress {
+    left: 1.35rem;
+    bottom: max(1.4rem, env(safe-area-inset-bottom));
+    width: min(12rem, calc(100vw - 5.6rem));
+    height: 2.45rem;
+  }
+
+  .stage-progress .stage-indicator {
+    inset: 0;
+    max-width: none;
+    gap: clamp(0.18rem, 0.84vw, 0.35rem);
+    font-size: clamp(0.67rem, 3.22vw, 0.9rem);
+  }
+
+  .stage-progress .progress {
+    inset: 25% 0 auto;
+    width: 100%;
+    height: 50%;
+  }
+
+  .stage-progress .progress__reservoir {
+    inset: 0;
+    width: auto;
+  }
+
+  .chapter[data-index='1'],
+  .chapter[data-index='2'],
+  .chapter[data-index='3'] {
+    padding-bottom: calc(max(1.4rem, env(safe-area-inset-bottom)) + 3.3rem);
+  }
+
+  .progress {
+    right: 0.45rem;
+    width: 3.8rem;
+  }
+
+  .progress__mark {
+    width: 3.8rem;
+    height: 3.25rem;
+  }
+
+  .progress__reservoir {
+    right: 0.68rem;
+    width: 2.3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop__sludge::before,
+  .backdrop__sludge::after,
+  .scroll-cue span,
+  .bio-smear,
+  .signal-tunnel,
+  .signal-tear,
+  .warning-ring,
+  .attic-portal,
+  .motif-scene::after,
+  .analog-overlay__roll,
+  .analog-overlay__rgb,
+  .burn-cursor {
+    animation-duration: 30s;
+  }
+
+  .analog-overlay__roll,
+  .analog-overlay__rgb,
+  .analog-overlay__scanlines,
+  .analog-overlay__noise,
+  .analog-overlay__tear,
+  .motif-scene::after,
+  .signal-tunnel,
+  .signal-tear,
+  .warning-ring,
+  .attic-portal,
+  .edge-tape__track,
+  .progress__fill,
+  .progress__fill::before,
+  .progress__meniscus,
+  .progress__reservoir::before,
+  .progress__reservoir::after {
+    animation: none;
+    transition: none;
+  }
+
+  .progress__bubble,
+  .chapter__sigil-strip .is-stage-glyph {
+    animation: none;
+  }
+
+  #experience.is-introduced .scroll-cue {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    animation: none;
+  }
+
+  .boot-panel {
+    animation: none;
+    background-image: none;
+  }
+
+  .boot-panel::after {
+    display: none;
+  }
+
+  #loadingOverlay.is-ready .boot-panel {
+    animation: none;
+  }
+
+  .shop-link.is-revealing {
+    opacity: 1;
+    transform: rotate(-1.5deg);
+    animation: none;
+  }
+
+  .shop-link.is-revealed {
+    animation: none;
+    filter: drop-shadow(0 0 0.5rem rgb(163 255 78 / 55%));
+  }
+
+  .shop-link.is-revealing .shop-link__label::after {
+    transform: scaleX(1);
+    animation: none;
+  }
+
+  .shop-link.is-revealing .shop-link__cover {
+    display: none;
+    animation: none;
+  }
+
+  .paint-mask,
+  .paint-mask::after,
+  .paint-atmosphere__layer,
+  .stage-indicator,
+  .stage-indicator span {
+    animation: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .burn-cursor {
+    display: none;
+  }
+}

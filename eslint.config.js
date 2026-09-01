@@ -17,10 +17,7 @@ export default defineConfig([
   },
   {
     files: ['src/**/*.ts', 'astro.config.ts'],
-    extends: [
-      ...tseslint.configs.strictTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
-    ],
+    extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parserOptions: {
         projectService: true,

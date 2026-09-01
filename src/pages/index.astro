@@ -1,22 +1,236 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import skullBannerUrl from '../assets/media/skull-banner.mp4?url';
+
+const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '⦿'];
 ---
 
 <BaseLayout
   title="Wax Attic"
   description="A unique clothing collection inspired by natural selection"
 >
-  <main id="game-container" aria-label="Wax Attic splash">
-    <canvas id="game"></canvas>
-    <a id="enterSite" href="https://waxattic.com" hidden>shop &gt;</a>
-    <div id="loadingOverlay" aria-live="polite">
-      <span id="loadingIndicator"></span>
+  <main id="experience" aria-label="Wax Attic evolution" data-chapter="0">
+    <div class="backdrop" aria-hidden="true">
+      <div class="backdrop__sludge"></div>
+      <div class="backdrop__motifs">
+        <div class="motif-scene motif-scene--pressing">
+          <div class="bio-smear bio-smear--left"></div>
+          <div class="bio-smear bio-smear--right"></div>
+          <div class="wax-wall">WAX WAX WAX WAX WAX WAX WAX WAX</div>
+        </div>
+        <div class="motif-scene motif-scene--lag">
+          <div class="signal-tunnel signal-tunnel--a"></div>
+          <div class="signal-tunnel signal-tunnel--b"></div>
+          <div class="signal-tunnel signal-tunnel--c"></div>
+          <div class="signal-tear signal-tear--a"></div>
+          <div class="signal-tear signal-tear--b"></div>
+        </div>
+        <div class="motif-scene motif-scene--darkness">
+          <video
+            class="skull-strip skull-strip--top ambient-video"
+            data-src={skullBannerUrl}
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="none"></video>
+          <video
+            class="skull-strip skull-strip--bottom ambient-video"
+            data-src={skullBannerUrl}
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="none"></video>
+          <div class="warning-ring">
+            ETERNAL · DARKNESS · ETERNAL · DARKNESS ·
+          </div>
+        </div>
+        <div class="motif-scene motif-scene--attic">
+          <div class="attic-portal">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="attic-mold"></div>
+          <div class="attic-mark">A WAX ATTIC<br />ORIGINAL</div>
+        </div>
+      </div>
+      <div class="backdrop__grain"></div>
     </div>
+
+    <div class="paint-atmosphere" aria-hidden="true">
+      <div class="paint-atmosphere__layer paint-atmosphere__layer--rear">
+        <i class="paint-mask paint-mask--dense"></i>
+        <i class="paint-mask paint-mask--scatter"></i>
+        <i class="paint-mask paint-mask--burst"></i>
+      </div>
+    </div>
+
+    <canvas id="burnCanvas" aria-hidden="true"></canvas>
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <canvas id="smokeCanvas" aria-hidden="true"></canvas>
+
+    <div class="analog-overlay" aria-hidden="true">
+      <canvas id="overlayParticles"></canvas>
+      <div class="analog-overlay__scanlines"></div>
+      <div class="analog-overlay__roll"></div>
+      <div class="analog-overlay__rgb"></div>
+      <div class="analog-overlay__noise"></div>
+      <div class="analog-overlay__tear analog-overlay__tear--a"></div>
+      <div class="analog-overlay__tear analog-overlay__tear--b"></div>
+      <div class="analog-overlay__vignette"></div>
+    </div>
+
+    <div class="foreground-motifs" aria-hidden="true">
+      <div
+        class="edge-tape edge-tape--left burn-reactive"
+        data-burn-target="ticker"
+      >
+        <div class="edge-tape__track">
+          <span>WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span><span
+            >WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <div class="story" aria-live="polite">
+      <div class="stage-progress">
+        <p
+          class="stage-indicator burn-reactive"
+          data-burn-target="sigils"
+          aria-hidden="true"
+        >
+          {stageGlyphs.map((glyph) => <span>{glyph}</span>)}
+        </p>
+        <nav
+          class="progress observer-ignore burn-reactive"
+          data-burn-target="progress"
+          aria-label="Story chapters"
+          aria-hidden="true"
+          inert
+        >
+          <span class="progress__reservoir" aria-hidden="true">
+            <span class="progress__fill"
+              ><i class="progress__bubble progress__bubble--a"></i><i
+                class="progress__bubble progress__bubble--b"></i></span
+            >
+            <span class="progress__meniscus"></span>
+          </span>
+          <button
+            class="progress__mark is-active"
+            type="button"
+            data-target="0"
+            aria-label="Introduction"
+            aria-current="step"></button>
+          <button
+            class="progress__mark"
+            type="button"
+            data-target="1"
+            aria-label="One of One"></button>
+          <button
+            class="progress__mark"
+            type="button"
+            data-target="2"
+            aria-label="Natural Selection"></button>
+          <button
+            class="progress__mark"
+            type="button"
+            data-target="3"
+            aria-label="Made in a Wax Attic"></button>
+        </nav>
+      </div>
+
+      <section
+        class="chapter is-active"
+        data-index="0"
+        aria-labelledby="chapter-0-title"
+      >
+        <h1 id="chapter-0-title" class="visually-hidden">Wax Attic</h1>
+        <button class="scroll-cue observer-ignore" id="scrollCue" type="button">
+          scroll / swipe to mutate <span aria-hidden="true">↓</span>
+        </button>
+      </section>
+
+      <section
+        class="chapter"
+        data-index="1"
+        aria-labelledby="chapter-1-title"
+        aria-hidden="true"
+        inert
+      >
+        <h2 id="chapter-1-title" class="burn-reactive" data-burn-target="title">
+          one of one
+        </h2>
+      </section>
+
+      <section
+        class="chapter"
+        data-index="2"
+        aria-labelledby="chapter-2-title"
+        aria-hidden="true"
+        inert
+      >
+        <div class="chapter__title-block">
+          <h2
+            id="chapter-2-title"
+            class="burn-reactive"
+            data-burn-target="title"
+          >
+            natural<br />selection
+          </h2>
+        </div>
+      </section>
+
+      <section
+        class="chapter chapter--final"
+        data-index="3"
+        aria-labelledby="chapter-3-title"
+        aria-hidden="true"
+        inert
+      >
+        <div class="chapter__final-copy">
+          <h2
+            id="chapter-3-title"
+            class="burn-reactive"
+            data-burn-target="title"
+          >
+            made in a<br />wax attic
+          </h2>
+        </div>
+        <a
+          class="shop-link observer-ignore burn-reactive"
+          data-burn-target="shop"
+          href="https://waxattic.com/"
+          aria-hidden="true"
+          tabindex="-1"
+        >
+          <span class="shop-link__label"
+            >shop now <span aria-hidden="true">&gt;</span></span
+          >
+          <span class="shop-link__cover" aria-hidden="true"></span>
+        </a>
+      </section>
+    </div>
+
+    <div id="loadingOverlay" aria-live="polite">
+      <div class="boot-panel">
+        <div class="boot-panel__readout">
+          <span id="loadingStatus">evolving</span><span id="loadingPercent"
+            >000%</span
+          >
+        </div>
+        <div class="boot-panel__bar" aria-hidden="true">
+          <span id="loadingBarFill"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="burn-cursor" aria-hidden="true"><span></span></div>
   </main>
 </BaseLayout>
 
 <script>
-  import Game from '../game';
+  import createExperience from '../game';
 
-  Game();
+  createExperience();
 </script>

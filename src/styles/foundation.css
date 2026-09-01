@@ -1,0 +1,64 @@
+:root {
+  --color-primary: #0fed19;
+  --color-black: #030504;
+  --color-loading: #161a17;
+  --font-body: 'Anonymous Pro', sans-serif;
+  --font-heading: 'Figtree', sans-serif;
+  --glow-opacity: 0.34;
+  --glow-scale: 1;
+  --grain-opacity: 0.12;
+  --backdrop-hue: 0deg;
+  --parallax-far-x: 0px;
+  --parallax-far-y: 0px;
+  --parallax-mid-x: 0px;
+  --parallax-mid-y: 0px;
+  --parallax-near-x: 0px;
+  --parallax-near-y: 0px;
+  --analog-opacity: 0.24;
+  --analog-damage: 0.2;
+  --story-progress: 0;
+  --story-clip: 0%;
+  --story-meniscus: 0%;
+  --cursor-x: -100px;
+  --cursor-y: -100px;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--color-black);
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 19px;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--color-black);
+  color: var(--color-primary);
+  text-align: center;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+a,
+a:visited,
+a:active {
+  color: var(--color-primary);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  opacity: 0.7;
+}
