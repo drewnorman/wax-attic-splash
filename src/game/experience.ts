@@ -19,6 +19,7 @@ gsap.registerPlugin(Observer);
 const TRANSITION_DURATION = 1.3;
 
 const MOMENTUM_COOLDOWN = 180;
+const TOUCH_DIRECTION_THRESHOLD = 12;
 
 const createExperience = async () => {
   const root = document.getElementById('experience');
@@ -63,8 +64,8 @@ const createExperience = async () => {
   let activeIndex = 0;
   let transitioning = false;
   let inspectingPointerId: number | null = null;
-  let touchHoldTimer: number | undefined;
   let touchOrigin: TouchOrigin | null = null;
+  let touchIntent: 'pending' | 'navigation' | 'burning' | null = null;
   let lastBurnPoint: Point | null = null;
   let cooldownTimer: number | undefined;
   let pointerFrame = 0;
@@ -75,6 +76,13 @@ const createExperience = async () => {
   const burnReleaseTimers = new Map<HTMLElement, number>();
   let rendererController: Awaited<ReturnType<typeof createRenderer>> | null =
     null;
+  const observers: Observer[] = [];
+  const disableObservers = () => {
+    observers.forEach((observer) => observer.disable());
+  };
+  const enableObservers = () => {
+    observers.forEach((observer) => observer.enable());
+  };
   try {
     rendererController = await createRenderer(
       canvas,
@@ -139,7 +147,7 @@ const createExperience = async () => {
     transitioning = true;
     clearBurnHits();
     shopReveal.reset();
-    observer?.disable();
+    disableObservers();
     window.clearTimeout(cooldownTimer);
     const previous = chapters[activeIndex];
     const next = chapters[nextIndex];
@@ -206,10 +214,7 @@ const createExperience = async () => {
         setAccessibilityState(activeIndex);
         transitioning = false;
         if (activeIndex === 3) shopReveal.activate();
-        cooldownTimer = window.setTimeout(
-          () => observer?.enable(),
-          MOMENTUM_COOLDOWN,
-        );
+        cooldownTimer = window.setTimeout(enableObservers, MOMENTUM_COOLDOWN);
       },
     });
     if (previousCopy) {
@@ -345,18 +350,29 @@ const createExperience = async () => {
     );
   };
 
-  const observer = Observer.create({
+  const observerOptions = {
     target: root,
-    type: 'wheel,touch',
     tolerance: 24,
     dragMinimum: 16,
     lockAxis: true,
     preventDefault: true,
     allowClicks: true,
     ignore: '.observer-ignore',
-    onDown: () => goTo(activeIndex + 1),
-    onUp: () => goTo(activeIndex - 1),
-  });
+  } satisfies Observer.ObserverVars;
+  observers.push(
+    Observer.create({
+      ...observerOptions,
+      type: 'wheel',
+      onDown: () => goTo(activeIndex + 1),
+      onUp: () => goTo(activeIndex - 1),
+    }),
+    Observer.create({
+      ...observerOptions,
+      type: 'touch',
+      onUp: () => goTo(activeIndex + 1),
+      onDown: () => goTo(activeIndex - 1),
+    }),
+  );
   const isInteractiveTarget = (target: EventTarget | null) =>
     target instanceof HTMLElement &&
     Boolean(target.closest('a, button, input, select, textarea'));
@@ -392,6 +408,18 @@ const createExperience = async () => {
       );
     });
   };
+  const startTouchBurn = (event: PointerEvent) => {
+    if (!touchOrigin || touchOrigin.pointerId !== event.pointerId) return;
+    touchIntent = 'burning';
+    inspectingPointerId = event.pointerId;
+    disableObservers();
+    root.setPointerCapture?.(event.pointerId);
+    rendererController?.setPointer(event.clientX, event.clientY, reducedMotion);
+    rendererController?.setSlowMotion(true);
+    rendererController?.setBurning(true, event.pressure || 0.7);
+    root.classList.add('is-inspecting', 'is-burning');
+    burnAt(touchOrigin.x, touchOrigin.y, event.pressure);
+  };
   const applyPointerMove = () => {
     pointerFrame = 0;
     const event = latestPointer;
@@ -404,16 +432,16 @@ const createExperience = async () => {
     );
     if (event.pointerType !== 'touch') root.classList.add('is-cursor-visible');
     if (event.pointerType === 'touch') {
-      if (
-        touchOrigin &&
-        inspectingPointerId === null &&
-        Math.hypot(
-          event.clientX - touchOrigin.x,
-          event.clientY - touchOrigin.y,
-        ) > 12
-      ) {
-        window.clearTimeout(touchHoldTimer);
-        touchOrigin = null;
+      if (touchOrigin && touchIntent === 'pending') {
+        const deltaX = event.clientX - touchOrigin.x;
+        const deltaY = event.clientY - touchOrigin.y;
+        if (Math.hypot(deltaX, deltaY) >= TOUCH_DIRECTION_THRESHOLD) {
+          if (Math.abs(deltaX) > Math.abs(deltaY)) startTouchBurn(event);
+          else {
+            touchIntent = 'navigation';
+            touchOrigin = null;
+          }
+        }
       }
       if (inspectingPointerId === event.pointerId) {
         event.preventDefault();
@@ -431,6 +459,11 @@ const createExperience = async () => {
       burnAt(event.clientX, event.clientY, event.pressure);
   };
   const onPointerMove = (event: PointerEvent) => {
+    if (
+      event.pointerType === 'touch' &&
+      inspectingPointerId === event.pointerId
+    )
+      event.preventDefault();
     latestPointer = event;
     if (!pointerFrame)
       pointerFrame = window.requestAnimationFrame(applyPointerMove);
@@ -443,22 +476,7 @@ const createExperience = async () => {
         y: event.clientY,
         pointerId: event.pointerId,
       };
-      window.clearTimeout(touchHoldTimer);
-      touchHoldTimer = window.setTimeout(() => {
-        if (!touchOrigin || touchOrigin.pointerId !== event.pointerId) return;
-        inspectingPointerId = event.pointerId;
-        observer?.disable();
-        root.setPointerCapture?.(event.pointerId);
-        rendererController?.setPointer(
-          touchOrigin.x,
-          touchOrigin.y,
-          reducedMotion,
-        );
-        rendererController?.setSlowMotion(true);
-        rendererController?.setBurning(true, event.pressure || 0.7);
-        root.classList.add('is-inspecting', 'is-burning');
-        burnAt(touchOrigin.x, touchOrigin.y, event.pressure);
-      }, 440);
+      touchIntent = 'pending';
       return;
     }
     if (event.button !== 0) return;
@@ -471,8 +489,8 @@ const createExperience = async () => {
     burnAt(event.clientX, event.clientY, event.pressure);
   };
   const releaseInspection = (event: PointerEvent) => {
-    window.clearTimeout(touchHoldTimer);
     touchOrigin = null;
+    touchIntent = null;
     if (inspectingPointerId === null || event.pointerId !== inspectingPointerId)
       return;
     if (root.hasPointerCapture?.(event.pointerId))
@@ -483,10 +501,7 @@ const createExperience = async () => {
     rendererController?.setBurning(false);
     root.classList.remove('is-inspecting', 'is-burning');
     if (!transitioning)
-      cooldownTimer = window.setTimeout(
-        () => observer?.enable(),
-        MOMENTUM_COOLDOWN,
-      );
+      cooldownTimer = window.setTimeout(enableObservers, MOMENTUM_COOLDOWN);
   };
   const onPointerLeave = () => {
     root.classList.remove('is-cursor-visible');
@@ -618,9 +633,8 @@ const createExperience = async () => {
   void chapterAssets.preloadChapter(1);
   const destroy = () => {
     window.clearTimeout(cooldownTimer);
-    window.clearTimeout(touchHoldTimer);
     window.cancelAnimationFrame(pointerFrame);
-    observer.kill();
+    observers.forEach((observer) => observer.kill());
     media.revert();
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('resize', onResize);

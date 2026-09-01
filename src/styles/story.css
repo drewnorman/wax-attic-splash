@@ -309,7 +309,11 @@
     cue-idle-glow 3.8s 1.25s ease-in-out infinite alternate;
 }
 
-.scroll-cue span {
+.scroll-cue__copy--touch {
+  display: none;
+}
+
+.scroll-cue__arrow {
   display: inline-block;
   margin-left: 0.24rem;
   font-size: 1.3em;

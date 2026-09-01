@@ -147,7 +147,13 @@ const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '�
       >
         <h1 id="chapter-0-title" class="visually-hidden">Wax Attic</h1>
         <button class="scroll-cue observer-ignore" id="scrollCue" type="button">
-          scroll / swipe to mutate <span aria-hidden="true">↓</span>
+          <span class="scroll-cue__copy scroll-cue__copy--non-touch"
+            >scroll to mutate</span
+          >
+          <span class="scroll-cue__copy scroll-cue__copy--touch"
+            >swipe up to mutate</span
+          >
+          <span class="scroll-cue__arrow" aria-hidden="true">↓</span>
         </button>
       </section>
 

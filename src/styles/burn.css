@@ -216,6 +216,12 @@
   }
 }
 
+@keyframes burn-ticker-wobble-mobile {
+  to {
+    transform: translateY(0.16rem) skewX(3deg);
+  }
+}
+
 @keyframes progress-fire {
   to {
     transform: translateY(-0.35rem) scaleX(0.84) rotate(4deg);
@@ -257,5 +263,11 @@
   .is-head-switching #scene {
     animation: none;
     transform: none;
+  }
+}
+
+@media screen and (width <= 720px) {
+  .edge-tape.is-burn-hit {
+    animation-name: burn-ticker-wobble-mobile;
   }
 }

@@ -25,7 +25,15 @@
   }
 
   .edge-tape {
-    opacity: 0.16;
+    width: auto;
+    opacity: 0.36;
+  }
+
+  .edge-tape--left {
+    top: max(0.75rem, env(safe-area-inset-top));
+    right: 20vw;
+    left: -1.25rem;
+    transform: none;
   }
 
   .chapter {
@@ -56,17 +64,24 @@
 
   .chapter--final {
     align-content: end;
-    justify-items: start;
+    grid-template-columns: minmax(0, 1fr) auto;
+    place-items: end stretch;
+    column-gap: clamp(0.8rem, 4vw, 1.5rem);
   }
 
   .chapter__final-copy {
-    width: calc(100% - 2.6rem);
+    width: auto;
+    min-width: 0;
   }
 
   .shop-link {
-    right: 3.6rem;
-    bottom: max(8.2rem, calc(env(safe-area-inset-bottom) + 7rem));
-    font-size: 1.7rem;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    place-self: end;
+    margin-bottom: 0.05rem;
+    font-size: clamp(1.15rem, 5.8vw, 1.7rem);
+    white-space: nowrap;
   }
 
   .stage-indicator {
@@ -127,10 +142,20 @@
   }
 }
 
+@media (hover: none) and (pointer: coarse) {
+  .scroll-cue__copy--non-touch {
+    display: none;
+  }
+
+  .scroll-cue__copy--touch {
+    display: inline;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .backdrop__sludge::before,
   .backdrop__sludge::after,
-  .scroll-cue span,
+  .scroll-cue__arrow,
   .bio-smear,
   .signal-tunnel,
   .signal-tear,
