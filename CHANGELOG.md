@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1](https://github.com/drewnorman/wax-attic-splash/compare/v0.2.0...v0.2.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **infra:** output Firebase subdomain CNAME ([84b0753](https://github.com/drewnorman/wax-attic-splash/commit/84b0753ae5b64613bd387c711f1a5c67179b84a4))
+* restore CI type checking ([deee945](https://github.com/drewnorman/wax-attic-splash/commit/deee945b3d78f8b2f15ae59933bf123d1d2ebc85))
+* show shop link after loading completes ([eab53ad](https://github.com/drewnorman/wax-attic-splash/commit/eab53adcefaae86badcc648b228b54dc02bc3fe4))
+
 ## [0.2.0](https://github.com/drewnorman/wax-attic-splash/compare/v0.1.0...v0.2.0) (2026-07-31)
 
 
