@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import type { ChapterState } from './state';
+import type { QualityTier } from './quality';
+import { QUALITY_TIERS } from './quality';
 
 const FIELD_COUNT = 72;
 
@@ -123,13 +125,31 @@ export const createDepthField = (scene: THREE.Scene, state: ChapterState) => {
   const positionB = new THREE.Vector3();
   const rotationA = new THREE.Euler();
   const rotationB = new THREE.Euler();
+  let quality = QUALITY_TIERS.high;
+  let dirty = true;
+  let lastSignature = '';
+  let lastUpdateTime = -Infinity;
+  let lastColorPhase = Number.NaN;
 
   const update = (time: number) => {
+    const signature = `${state.fieldForm.toFixed(4)}:${state.fieldOpacity.toFixed(4)}:${state.colorPhase.toFixed(4)}:${group.position.x.toFixed(3)}:${group.position.y.toFixed(3)}:${quality.name}`;
+    if (!dirty && state.fieldMotion === 0 && signature === lastSignature)
+      return;
+    if (
+      !dirty &&
+      quality.name === 'low' &&
+      state.fieldMotion !== 0 &&
+      time - lastUpdateTime < 1 / 30
+    )
+      return;
+    dirty = false;
+    lastSignature = signature;
+    lastUpdateTime = time;
     const lower = Math.floor(state.fieldForm);
     const upper = Math.min(3, lower + 1);
     const mix = THREE.MathUtils.smoothstep(state.fieldForm - lower, 0, 1);
     const fieldTime = time * state.fieldMotion;
-    for (let index = 0; index < FIELD_COUNT; index += 1) {
+    for (let index = 0; index < quality.fieldInstances; index += 1) {
       const scaleA = setFieldTarget(
         index,
         lower,
@@ -171,7 +191,7 @@ export const createDepthField = (scene: THREE.Scene, state: ChapterState) => {
     }
     field.instanceMatrix.needsUpdate = true;
     lineGeometry.attributes.position.needsUpdate = true;
-    for (let index = 0; index < particleCount; index += 1) {
+    for (let index = 0; index < quality.fieldParticles; index += 1) {
       const offset = index * 3;
       const seed = (index * 0.61803398875) % 1;
       const depth = (index % 55) / 54;
@@ -188,15 +208,21 @@ export const createDepthField = (scene: THREE.Scene, state: ChapterState) => {
     }
     particleGeometry.attributes.position.needsUpdate = true;
     material.opacity = state.fieldOpacity * 0.72;
-    material.color.setHSL(
-      0.31 - state.colorPhase * 0.08,
-      0.92,
-      0.36 + state.colorPhase * 0.08,
-    );
     lineMaterial.opacity = state.fieldOpacity * 0.62;
-    lineMaterial.color.setHSL(0.3 - state.colorPhase * 0.18, 0.95, 0.55);
     particleMaterial.opacity = 0.18 + state.fieldOpacity * 0.58;
-    particleMaterial.color.setHSL(0.32 - state.colorPhase * 0.23, 0.92, 0.62);
+    if (
+      !Number.isFinite(lastColorPhase) ||
+      Math.abs(lastColorPhase - state.colorPhase) > 0.002
+    ) {
+      lastColorPhase = state.colorPhase;
+      material.color.setHSL(
+        0.31 - state.colorPhase * 0.08,
+        0.92,
+        0.36 + state.colorPhase * 0.08,
+      );
+      lineMaterial.color.setHSL(0.3 - state.colorPhase * 0.18, 0.95, 0.55);
+      particleMaterial.color.setHSL(0.32 - state.colorPhase * 0.23, 0.92, 0.62);
+    }
   };
 
   return {
@@ -207,8 +233,25 @@ export const createDepthField = (scene: THREE.Scene, state: ChapterState) => {
       material.needsUpdate = true;
     },
     setParallax: (x: number, y: number) => {
-      group.position.x = x * -0.18;
-      group.position.y = y * 0.12;
+      const nextX = x * -0.18;
+      const nextY = y * 0.12;
+      if (
+        Math.abs(group.position.x - nextX) > 0.001 ||
+        Math.abs(group.position.y - nextY) > 0.001
+      )
+        dirty = true;
+      group.position.x = nextX;
+      group.position.y = nextY;
+    },
+    invalidate: () => {
+      dirty = true;
+    },
+    setQuality: (next: QualityTier) => {
+      quality = next;
+      field.count = next.fieldInstances;
+      lineGeometry.setDrawRange(0, next.fieldInstances * 2);
+      particleGeometry.setDrawRange(0, next.fieldParticles);
+      dirty = true;
     },
     dispose: () => {
       scene.remove(group);

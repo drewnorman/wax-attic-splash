@@ -5,6 +5,8 @@ import { CHAPTERS } from './state';
 import type { Point, TouchOrigin } from './state';
 import { createOverlayParticles, createBurnLayer } from './canvas-effects';
 import { createRenderer } from './renderer';
+import { createChapterAssetLoader } from './chapter-assets';
+import { QUALITY_TIERS, selectInitialQuality } from './quality';
 import {
   createTextFlicker,
   createTitleMutations,
@@ -26,8 +28,12 @@ const createExperience = async () => {
   const smokeCanvas = document.getElementById('smokeCanvas');
   if (!(root instanceof HTMLElement) || !(canvas instanceof HTMLCanvasElement))
     return null;
-  const bootLoader = createBootLoader(root);
-  const preloadPromise = bootLoader.preload();
+  const bootLoader = createBootLoader();
+  const chapterAssets = createChapterAssetLoader(root);
+  const preloadPromise = Promise.all([
+    bootLoader.preload(),
+    chapterAssets.preloadCritical(),
+  ]);
   const chapters = Array.from(root.querySelectorAll<HTMLElement>('.chapter'));
   const progressNav = root.querySelector('.progress');
   const progressMarks = Array.from(
@@ -50,6 +56,10 @@ const createExperience = async () => {
   const stutterController = createSceneStutter(root);
   const media = gsap.matchMedia();
   let reducedMotion = false;
+  let quality = selectInitialQuality(
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  root.dataset.quality = quality.name;
   let activeIndex = 0;
   let transitioning = false;
   let inspectingPointerId: number | null = null;
@@ -57,6 +67,8 @@ const createExperience = async () => {
   let touchOrigin: TouchOrigin | null = null;
   let lastBurnPoint: Point | null = null;
   let cooldownTimer: number | undefined;
+  let pointerFrame = 0;
+  let latestPointer: PointerEvent | null = null;
   const burnReactive = Array.from(
     root.querySelectorAll<HTMLElement>('.burn-reactive'),
   );
@@ -70,7 +82,16 @@ const createExperience = async () => {
       root,
       ambient,
       ambientTimelines,
+      (nextQuality) => {
+        quality = nextQuality;
+        root.dataset.quality = nextQuality.name;
+        overlayController.setQuality(nextQuality);
+        burnController.setQuality(nextQuality);
+      },
     );
+    rendererController.setQuality(quality);
+    overlayController.setQuality(quality);
+    burnController.setQuality(quality);
     bootLoader.settle('webgl', true);
     bootLoader.settle('head', rendererController.headAvailable);
   } catch (error) {
@@ -130,6 +151,11 @@ const createExperience = async () => {
       progressNav.setAttribute('aria-hidden', 'false');
     }
     rendererController?.setChapter(nextIndex);
+    if (nextIndex >= 1) void rendererController?.preloadFinale();
+    void chapterAssets.preloadChapter(
+      Math.min(chapters.length - 1, nextIndex + 1),
+    );
+    overlayController.invalidate();
     next.classList.add('is-active');
     next.removeAttribute('inert');
     next.setAttribute('aria-hidden', 'false');
@@ -366,7 +392,10 @@ const createExperience = async () => {
       );
     });
   };
-  const onPointerMove = (event: PointerEvent) => {
+  const applyPointerMove = () => {
+    pointerFrame = 0;
+    const event = latestPointer;
+    if (!event) return;
     root.style.setProperty('--cursor-x', `${event.clientX}px`);
     root.style.setProperty('--cursor-y', `${event.clientY}px`);
     root.classList.toggle(
@@ -400,6 +429,11 @@ const createExperience = async () => {
     rendererController?.setPointer(event.clientX, event.clientY, reducedMotion);
     if (inspectingPointerId === event.pointerId)
       burnAt(event.clientX, event.clientY, event.pressure);
+  };
+  const onPointerMove = (event: PointerEvent) => {
+    latestPointer = event;
+    if (!pointerFrame)
+      pointerFrame = window.requestAnimationFrame(applyPointerMove);
   };
   const onPointerDown = (event: PointerEvent) => {
     if (isInteractiveTarget(event.target)) return;
@@ -487,6 +521,22 @@ const createExperience = async () => {
     overlayController.resize();
     burnController.resize();
   };
+  const onVisibilityChange = () => {
+    if (document.hidden) {
+      overlayController.pause();
+      burnController.pause();
+      ambientTimelines.forEach((timeline) => {
+        timeline.pause();
+      });
+    } else {
+      overlayController.start();
+      burnController.start();
+      if (!reducedMotion)
+        ambientTimelines.forEach((timeline) => {
+          timeline.play();
+        });
+    }
+  };
   const onScrollCueClick = () => goTo(1);
   const onProgressClick = (event: MouseEvent) => {
     if (event.currentTarget instanceof HTMLElement)
@@ -494,6 +544,7 @@ const createExperience = async () => {
   };
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('resize', onResize);
+  document.addEventListener('visibilitychange', onVisibilityChange);
   root.addEventListener('pointermove', onPointerMove);
   root.addEventListener('pointerdown', onPointerDown);
   root.addEventListener('pointerup', releaseInspection);
@@ -508,6 +559,11 @@ const createExperience = async () => {
   );
   media.add('(prefers-reduced-motion: reduce)', () => {
     reducedMotion = true;
+    quality = QUALITY_TIERS.low;
+    root.dataset.quality = quality.name;
+    rendererController?.setQuality(quality);
+    overlayController.setQuality(quality);
+    burnController.setQuality(quality);
     shopReveal.setReducedMotion(true);
     rendererController?.setReducedMotion(true);
     overlayController.setReducedMotion(true);
@@ -536,6 +592,11 @@ const createExperience = async () => {
     });
     return () => {
       reducedMotion = false;
+      quality = selectInitialQuality(false);
+      root.dataset.quality = quality.name;
+      rendererController?.setQuality(quality);
+      overlayController.setQuality(quality);
+      burnController.setQuality(quality);
       shopReveal.setReducedMotion(false);
       rendererController?.setReducedMotion(false);
       overlayController.setReducedMotion(false);
@@ -554,13 +615,16 @@ const createExperience = async () => {
   });
   await bootLoader.finish();
   root.classList.add('is-introduced');
+  void chapterAssets.preloadChapter(1);
   const destroy = () => {
     window.clearTimeout(cooldownTimer);
     window.clearTimeout(touchHoldTimer);
+    window.cancelAnimationFrame(pointerFrame);
     observer.kill();
     media.revert();
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('resize', onResize);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
     root.removeEventListener('pointermove', onPointerMove);
     root.removeEventListener('pointerdown', onPointerDown);
     root.removeEventListener('pointerup', releaseInspection);
@@ -583,6 +647,7 @@ const createExperience = async () => {
     shopReveal.destroy();
     clearBurnHits();
     bootLoader.destroy();
+    chapterAssets.destroy();
     rendererController?.destroy();
   };
   return { goTo, resize: onResize, destroy };

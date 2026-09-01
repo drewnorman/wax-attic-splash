@@ -5,6 +5,8 @@ import type {
   BurnStamp,
   SmokeParticle,
 } from './state';
+import type { QualityTier } from './quality';
+import { QUALITY_TIERS } from './quality';
 
 export const createOverlayParticles = (
   canvas: Element | null,
@@ -12,10 +14,26 @@ export const createOverlayParticles = (
   ambient: AmbientState,
 ) => {
   if (!(canvas instanceof HTMLCanvasElement))
-    return { resize: () => {}, setReducedMotion: () => {}, destroy: () => {} };
+    return {
+      resize: () => {},
+      setReducedMotion: () => {},
+      setQuality: () => {},
+      start: () => {},
+      pause: () => {},
+      invalidate: () => {},
+      destroy: () => {},
+    };
   const context = canvas.getContext('2d');
   if (!context)
-    return { resize: () => {}, setReducedMotion: () => {}, destroy: () => {} };
+    return {
+      resize: () => {},
+      setReducedMotion: () => {},
+      setQuality: () => {},
+      start: () => {},
+      pause: () => {},
+      invalidate: () => {},
+      destroy: () => {},
+    };
   const seeds = Array.from({ length: 190 }, (_, index) => ({
     x: (index * 0.61803398875) % 1,
     y: (index * 0.41421356237) % 1,
@@ -26,9 +44,11 @@ export const createOverlayParticles = (
   let height = 1;
   let frameId = 0;
   let reducedMotion = false;
+  let running = false;
+  let quality = QUALITY_TIERS.high;
 
   const resize = () => {
-    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const ratio = Math.min(window.devicePixelRatio || 1, quality.pixelRatioCap);
     width = window.innerWidth;
     height = window.innerHeight;
     canvas.width = Math.round(width * ratio);
@@ -36,15 +56,20 @@ export const createOverlayParticles = (
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    if (reducedMotion) renderOnce();
   };
 
-  const render = () => {
+  const renderOnce = () => {
     context.clearRect(0, 0, width, height);
     const chapter = Math.round(state.fieldForm);
     const visibleCount = [74, 112, 190, 58][chapter] ?? 74;
     const damage = [0.18, 0.42, 1, 0.14][chapter] ?? 0.18;
     const time = reducedMotion ? 0 : ambient.sceneTime;
-    for (let index = 0; index < visibleCount; index += 1) {
+    for (
+      let index = 0;
+      index < Math.min(visibleCount, quality.overlayParticles);
+      index += 1
+    ) {
       const seed = seeds[index];
       const x =
         ((seed.x * width + time * seed.speed * width) % (width + 30)) - 15;
@@ -67,17 +92,46 @@ export const createOverlayParticles = (
         context.fillRect(x, y, seed.size, seed.size * (1 + damage * 1.6));
       }
     }
+  };
+
+  const render = () => {
+    if (!running || reducedMotion || document.hidden) {
+      frameId = 0;
+      return;
+    }
+    renderOnce();
     frameId = window.requestAnimationFrame(render);
+  };
+  const start = () => {
+    if (running || reducedMotion || document.hidden) return;
+    running = true;
+    frameId = window.requestAnimationFrame(render);
+  };
+  const pause = () => {
+    running = false;
+    if (frameId) window.cancelAnimationFrame(frameId);
+    frameId = 0;
   };
 
   resize();
-  render();
+  start();
   return {
     resize,
+    start,
+    pause,
+    invalidate: renderOnce,
+    setQuality: (next: QualityTier) => {
+      quality = next;
+      resize();
+    },
     setReducedMotion: (active: boolean) => {
       reducedMotion = active;
+      if (active) {
+        pause();
+        renderOnce();
+      } else start();
     },
-    destroy: () => window.cancelAnimationFrame(frameId),
+    destroy: pause,
   };
 };
 
@@ -94,6 +148,9 @@ export const createBurnLayer = (
       resize: () => {},
       add: () => {},
       setReducedMotion: () => {},
+      setQuality: () => {},
+      start: () => {},
+      pause: () => {},
       destroy: () => {},
     };
   }
@@ -104,6 +161,9 @@ export const createBurnLayer = (
       resize: () => {},
       add: () => {},
       setReducedMotion: () => {},
+      setQuality: () => {},
+      start: () => {},
+      pause: () => {},
       destroy: () => {},
     };
   const stamps: BurnStamp[] = [];
@@ -112,9 +172,22 @@ export const createBurnLayer = (
   let height = 1;
   let ratio = 1;
   let reducedMotion = false;
+  let quality = QUALITY_TIERS.high;
   let frameId = 0;
   let lastTime = performance.now();
   const stampLifetime = 1350;
+  const smokeSprite = document.createElement('canvas');
+  smokeSprite.width = 96;
+  smokeSprite.height = 96;
+  const spriteContext = smokeSprite.getContext('2d');
+  if (spriteContext) {
+    const gradient = spriteContext.createRadialGradient(48, 48, 0, 48, 48, 48);
+    gradient.addColorStop(0, 'rgb(112 119 105 / 18%)');
+    gradient.addColorStop(0.45, 'rgb(34 39 34 / 14%)');
+    gradient.addColorStop(1, 'rgb(0 0 0 / 0%)');
+    spriteContext.fillStyle = gradient;
+    spriteContext.fillRect(0, 0, 96, 96);
+  }
 
   const drawStamp = (stamp: BurnStamp, age = 0) => {
     const x = stamp.x * width;
@@ -191,7 +264,7 @@ export const createBurnLayer = (
   const resize = () => {
     width = window.innerWidth;
     height = window.innerHeight;
-    ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    ratio = Math.min(window.devicePixelRatio || 1, quality.pixelRatioCap);
     [scarCanvas, smokeCanvas].forEach((canvas) => {
       canvas.width = Math.round(width * ratio);
       canvas.height = Math.round(height * ratio);
@@ -216,7 +289,11 @@ export const createBurnLayer = (
     if (stamps.length > 700) stamps.shift();
     drawStamp(stamp, 0);
     if (!reducedMotion) {
-      for (let index = 0; index < 6 && smoke.length < 240; index += 1) {
+      for (
+        let index = 0;
+        index < 6 && smoke.length < quality.smokeParticles;
+        index += 1
+      ) {
         smoke.push({
           x: clientX + (Math.random() - 0.5) * stamp.radius,
           y: clientY + (Math.random() - 0.5) * stamp.radius * 0.4,
@@ -228,6 +305,7 @@ export const createBurnLayer = (
         });
       }
     }
+    schedule();
   };
 
   const renderSmoke = (now: number) => {
@@ -247,39 +325,44 @@ export const createBurnLayer = (
       particle.y += particle.vy * delta;
       particle.vx += Math.sin(particle.age * 7 + index) * delta * 4;
       const progress = particle.age / particle.life;
-      const gradient = smokeContext.createRadialGradient(
-        particle.x,
-        particle.y,
-        0,
-        particle.x,
-        particle.y,
-        particle.size * (1 + progress),
+      const size = particle.size * (1 + progress) * 2;
+      smokeContext.globalAlpha = 1 - progress;
+      smokeContext.drawImage(
+        smokeSprite,
+        particle.x - size / 2,
+        particle.y - size / 2,
+        size,
+        size,
       );
-      gradient.addColorStop(0, `rgb(112 119 105 / ${(1 - progress) * 0.18})`);
-      gradient.addColorStop(0.45, `rgb(34 39 34 / ${(1 - progress) * 0.14})`);
-      gradient.addColorStop(1, 'rgb(0 0 0 / 0%)');
-      smokeContext.fillStyle = gradient;
-      smokeContext.beginPath();
-      smokeContext.arc(
-        particle.x,
-        particle.y,
-        particle.size * (1 + progress),
-        0,
-        Math.PI * 2,
-      );
-      smokeContext.fill();
     }
+    smokeContext.globalAlpha = 1;
+    frameId = 0;
+    if ((stamps.length || smoke.length) && !document.hidden) schedule();
+  };
+
+  const schedule = () => {
+    if (frameId || document.hidden || (!stamps.length && !smoke.length)) return;
+    lastTime = performance.now();
     frameId = window.requestAnimationFrame(renderSmoke);
   };
 
   resize();
-  frameId = window.requestAnimationFrame(renderSmoke);
   return {
     resize,
     add,
+    start: schedule,
+    pause: () => {
+      if (frameId) window.cancelAnimationFrame(frameId);
+      frameId = 0;
+    },
+    setQuality: (next: QualityTier) => {
+      quality = next;
+      resize();
+    },
     setReducedMotion: (active: boolean) => {
       reducedMotion = active;
       if (active) smoke.splice(0);
+      schedule();
     },
     destroy: () => window.cancelAnimationFrame(frameId),
   };

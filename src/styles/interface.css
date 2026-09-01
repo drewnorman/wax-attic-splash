@@ -136,9 +136,12 @@
   border: 1px solid #66816a;
   color: #c9e1cb;
   background:
-    url('/images/grunge-darkness.webp') center / 25rem,
+    repeating-linear-gradient(
+      115deg,
+      rgb(78 112 76 / 10%) 0 1px,
+      transparent 1px 7px
+    ),
     #0b0e0c;
-  background-blend-mode: soft-light;
   box-shadow:
     0.38rem 0.42rem 0 #030403,
     inset 0 0 1.4rem rgb(25 255 70 / 4%);

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { QualityTier } from './quality';
 
 export const createCubeFireEmitter = (modelGroup: THREE.Group) => {
   const capacity = 280;
@@ -25,6 +26,7 @@ export const createCubeFireEmitter = (modelGroup: THREE.Group) => {
     smoke: false,
   }));
   const normal = new THREE.Vector3();
+  const emittedPosition = new THREE.Vector3();
   let cursor = 0;
   let accumulator = 0;
   let active = false;
@@ -40,15 +42,15 @@ export const createCubeFireEmitter = (modelGroup: THREE.Group) => {
     const sign = face % 2 ? 1 : -1;
     normal.set(0, 0, 0).setComponent(axis, sign);
     const offset = index * 3;
-    const point = new THREE.Vector3(
+    emittedPosition.set(
       (Math.random() - 0.5) * 2.24,
       (Math.random() - 0.5) * 2.24,
       (Math.random() - 0.5) * 2.24,
     );
-    point.setComponent(axis, sign * 1.12);
-    positions[offset] = point.x;
-    positions[offset + 1] = point.y;
-    positions[offset + 2] = point.z;
+    emittedPosition.setComponent(axis, sign * 1.12);
+    positions[offset] = emittedPosition.x;
+    positions[offset + 1] = emittedPosition.y;
+    positions[offset + 2] = emittedPosition.z;
     particle.age = 0;
     particle.life = smoke
       ? 0.8 + Math.random() * 0.9
@@ -64,11 +66,24 @@ export const createCubeFireEmitter = (modelGroup: THREE.Group) => {
       : 1.1 + Math.random() * 1.6;
   };
   const update = (delta: number, intensity: number, cubeVisible: boolean) => {
+    let hasLiveParticles = false;
+    for (let index = 0; index < limit; index += 1) {
+      if (particles[index].age < particles[index].life) {
+        hasLiveParticles = true;
+        break;
+      }
+    }
+    if ((!active || reducedMotion || !cubeVisible) && !hasLiveParticles) {
+      points.visible = false;
+      return;
+    }
     points.visible = cubeVisible && !reducedMotion;
+    let changed = false;
     if (active && !reducedMotion && cubeVisible) {
       accumulator += delta * (70 + pressure * 150) * intensity;
       while (accumulator >= 1) {
         emit(false);
+        changed = true;
         if (Math.random() < 0.72) emit(true);
         accumulator -= 1;
       }
@@ -76,6 +91,7 @@ export const createCubeFireEmitter = (modelGroup: THREE.Group) => {
     for (let index = 0; index < limit; index += 1) {
       const particle = particles[index];
       if (particle.age >= particle.life) continue;
+      changed = true;
       particle.age += delta;
       const offset = index * 3;
       positions[offset] += particle.velocity.x * delta;
@@ -95,8 +111,10 @@ export const createCubeFireEmitter = (modelGroup: THREE.Group) => {
         colors[offset + 2] = 0.08 * fade;
       }
     }
-    geometry.attributes.position.needsUpdate = true;
-    geometry.attributes.color.needsUpdate = true;
+    if (changed) {
+      geometry.attributes.position.needsUpdate = true;
+      geometry.attributes.color.needsUpdate = true;
+    }
   };
   const resize = () => {
     limit = window.innerWidth < 720 ? 120 : capacity;
@@ -113,6 +131,10 @@ export const createCubeFireEmitter = (modelGroup: THREE.Group) => {
     setReducedMotion: (next: boolean) => {
       reducedMotion = next;
       if (next) active = false;
+    },
+    setQuality: (tier: QualityTier) => {
+      limit = tier.fireParticles;
+      points.geometry.setDrawRange(0, limit);
     },
     dispose: () => {
       geometry.dispose();

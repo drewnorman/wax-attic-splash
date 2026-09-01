@@ -119,19 +119,19 @@
 }
 
 .paint-mask--dense {
-  --paint-mask: url('/images/paint-grunge-dense.png');
+  --paint-mask: url('../assets/media/paint-grunge-dense.webp');
 
   aspect-ratio: 285 / 518;
 }
 
 .paint-mask--scatter {
-  --paint-mask: url('/images/paint-grunge-scatter.png');
+  --paint-mask: url('../assets/media/paint-grunge-scatter.webp');
 
   aspect-ratio: 285 / 518;
 }
 
 .paint-mask--burst {
-  --paint-mask: url('/images/paint-grunge-burst.png');
+  --paint-mask: url('../assets/media/paint-grunge-burst.webp');
 
   aspect-ratio: 1500 / 1004;
 }
@@ -287,26 +287,38 @@
 }
 
 .motif-scene--pressing::after {
-  background-image: url('/images/grunge-pressing.webp');
+  background-image: url('../assets/media/grunge-pressing.webp');
   opacity: 0.15;
 }
 
 .motif-scene--lag::after {
-  background-image: url('/images/grunge-lag.webp');
+  background-image: none;
   opacity: 0.22;
   animation-duration: 3.7s;
 }
 
 .motif-scene--darkness::after {
-  background-image: url('/images/grunge-darkness.webp');
+  background-image: none;
   opacity: 0.3;
   animation-duration: 2.9s;
 }
 
 .motif-scene--attic::after {
-  background-image: url('/images/grunge-attic.webp');
+  background-image: none;
   opacity: 0.22;
   animation-duration: 5.1s;
+}
+
+#experience.assets-chapter-1 .motif-scene--lag::after {
+  background-image: url('../assets/media/grunge-lag.webp');
+}
+
+#experience.assets-chapter-2 .motif-scene--darkness::after {
+  background-image: url('../assets/media/grunge-darkness.webp');
+}
+
+#experience.assets-chapter-3 .motif-scene--attic::after {
+  background-image: url('../assets/media/grunge-attic.webp');
 }
 
 #experience[data-chapter='0'] .motif-scene--pressing,
@@ -322,7 +334,7 @@
   width: clamp(15rem, 32vw, 34rem);
   aspect-ratio: 1.25;
   background:
-    url('/images/grunge-pressing.webp') center / cover,
+    url('../assets/media/grunge-pressing.webp') center / cover,
     repeating-radial-gradient(
       ellipse at 28% 40%,
       #365c27 0 5%,
@@ -581,7 +593,7 @@
   width: clamp(18rem, 34vw, 37rem);
   aspect-ratio: 1;
   background:
-    url('/images/grunge-attic.webp') center / cover,
+    url('../assets/media/grunge-attic.webp') center / cover,
     conic-gradient(from 28deg, #633b70, #345f3b, #9b7d78, #633b70);
   border-radius: 44% 56% 63% 37% / 52% 37% 63% 48%;
   clip-path: polygon(
@@ -659,7 +671,7 @@
 
 .backdrop__grain {
   opacity: var(--grain-opacity);
-  background-image: url('/images/statik.gif');
+  background-image: url('../assets/media/statik.webp');
   background-position: center;
   background-size: auto 38vh;
   mix-blend-mode: soft-light;

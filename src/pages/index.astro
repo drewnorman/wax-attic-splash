@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import skullBannerUrl from '../assets/media/skull-banner.mp4?url';
 
 const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '⦿'];
 ---
@@ -27,20 +28,20 @@ const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '�
         <div class="motif-scene motif-scene--darkness">
           <video
             class="skull-strip skull-strip--top ambient-video"
-            src="/images/skull-banner.mp4"
+            data-src={skullBannerUrl}
             autoplay
             muted
             loop
             playsinline
-            preload="auto"></video>
+            preload="none"></video>
           <video
             class="skull-strip skull-strip--bottom ambient-video"
-            src="/images/skull-banner.mp4"
+            data-src={skullBannerUrl}
             autoplay
             muted
             loop
             playsinline
-            preload="auto"></video>
+            preload="none"></video>
           <div class="warning-ring">
             ETERNAL · DARKNESS · ETERNAL · DARKNESS ·
           </div>

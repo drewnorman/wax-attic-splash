@@ -204,6 +204,21 @@
   }
 }
 
+#experience[data-quality='low'] .analog-overlay__roll,
+#experience[data-quality='low'] .analog-overlay__rgb,
+#experience[data-quality='low'] .analog-overlay__tear--b {
+  display: none;
+}
+
+#experience[data-quality='low'] .motif-scene::after,
+#experience[data-quality='low'] .backdrop__grain {
+  animation: none;
+}
+
+#experience[data-quality='low'] .analog-overlay__vignette {
+  filter: none;
+}
+
 @keyframes grunge-stutter {
   0%,
   78%,

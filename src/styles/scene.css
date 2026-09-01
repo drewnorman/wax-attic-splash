@@ -136,7 +136,7 @@
 }
 
 .analog-overlay__noise {
-  background-image: url('/images/statik.gif');
+  background-image: url('../assets/media/statik.webp');
   background-size: 28rem;
   filter: contrast(1.8) saturate(0.25);
   mix-blend-mode: screen;

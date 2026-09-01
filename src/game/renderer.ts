@@ -15,11 +15,10 @@ import {
   loadHeadGeometry,
 } from './head-geometry';
 import { createDepthField } from './depth-field';
-import {
-  createProceduralSkull,
-  createFinalSceneEffects,
-} from './finale-effects';
 import { createCubeFireEmitter } from './cube-fire';
+import type { QualityTier } from './quality';
+import { QUALITY_TIERS } from './quality';
+import waxTextureUrl from '../assets/media/wax-texture.webp?url';
 
 const getVariantMaterials = (variant: THREE.Object3D) => {
   const materials: unknown = variant.userData.materials;
@@ -37,6 +36,7 @@ export const createRenderer = async (
   root: HTMLElement,
   ambient: AmbientState,
   ambientTimelines: Timeline[],
+  onQualityDowngrade?: (tier: QualityTier) => void,
 ) => {
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -131,9 +131,8 @@ export const createRenderer = async (
   const headMesh = new THREE.Mesh(headGeometry, headMaterial);
   headMesh.scale.setScalar(1.18);
   headMesh.position.y = -0.48;
-  const proceduralSkull = createProceduralSkull();
-  const skullVariants = [proceduralSkull];
-  const headVariants = [headMesh, ...skullVariants];
+  const skullVariants: THREE.Group[] = [];
+  const headVariants: THREE.Object3D[] = [headMesh];
   skullVariants.forEach((variant) => {
     variant.userData.idleBasePosition = variant.position.clone();
     variant.userData.idleBaseRotation = variant.rotation.clone();
@@ -149,12 +148,48 @@ export const createRenderer = async (
   modelGroup.add(contentPivot);
   scene.add(modelGroup, effectsGroup);
   const cubeFire = createCubeFireEmitter(contentPivot);
-  const finalEffects = createFinalSceneEffects(
-    effectsGroup,
-    contentPivot,
-    headVariants,
-    root,
-  );
+  type FinalEffects = ReturnType<
+    (typeof import('./finale-effects'))['createFinalSceneEffects']
+  >;
+  const emptyMorph = { intensity: 0, tear: 0 };
+  let finalEffects: FinalEffects | null = null;
+  let finalePromise: Promise<void> | null = null;
+  let finaleActive = false;
+  let destroyed = false;
+  const preloadFinale = () => {
+    if (finalePromise) return finalePromise;
+    finalePromise = import('./finale-effects')
+      .then(({ createProceduralSkull, createFinalSceneEffects }) => {
+        if (destroyed) return;
+        const skull = createProceduralSkull();
+        skull.userData.idleBasePosition = skull.position.clone();
+        skull.userData.idleBaseRotation = skull.rotation.clone();
+        getVariantMaterials(skull).forEach((material) => {
+          material.uniforms.uTexture.value = skullTexture ?? fallbackTexture;
+        });
+        skullVariants.push(skull);
+        headVariants.push(skull);
+        contentPivot.add(skull);
+        finalEffects = createFinalSceneEffects(
+          effectsGroup,
+          contentPivot,
+          headVariants,
+          root,
+        );
+        if (skullTexture) finalEffects.setTexture(skullTexture);
+        finalEffects.setQuality(quality);
+        finalEffects.setReducedMotion(reducedMotion);
+        finalEffects.setActive(finaleActive);
+        finalEffects.resize();
+      })
+      .catch((error: unknown) => {
+        console.warn(
+          'Finale effects unavailable; keeping the base head.',
+          error,
+        );
+      });
+    return finalePromise;
+  };
   const sludgeUniforms = {
     uTime: { value: 0 },
     uIntensity: { value: state.sludge },
@@ -175,9 +210,7 @@ export const createRenderer = async (
   const depthField = createDepthField(scene, state);
   let skullTexture: THREE.Texture | null = null;
   try {
-    const texture = await new THREE.TextureLoader().loadAsync(
-      '/images/wax-texture.png',
-    );
+    const texture = await new THREE.TextureLoader().loadAsync(waxTextureUrl);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.MirroredRepeatWrapping;
     texture.wrapT = THREE.MirroredRepeatWrapping;
@@ -192,7 +225,6 @@ export const createRenderer = async (
       });
     });
     depthField.setTexture(texture);
-    finalEffects.setTexture(texture);
     fallbackTexture.dispose();
   } catch (error) {
     console.warn(
@@ -230,6 +262,18 @@ export const createRenderer = async (
   let glitchEndsAt = 0;
   let nextGlitchAt = 0;
   let reducedMotion = false;
+  let quality = QUALITY_TIERS.high;
+  let sampleStartedAt = performance.now();
+  let sampleAfter = sampleStartedAt + 1000;
+  let sampleTotal = 0;
+  let sampleCount = 0;
+  const parallaxValues = new Map<string, number>();
+  const setParallaxProperty = (name: string, value: number) => {
+    const previous = parallaxValues.get(name);
+    if (previous !== undefined && Math.abs(previous - value) < 0.08) return;
+    parallaxValues.set(name, value);
+    root.style.setProperty(name, `${value}px`);
+  };
   let nextShowcaseAt = 4 + Math.random() * 4;
   let showcaseStartedAt = -1;
   let showcaseDuration = 0;
@@ -241,6 +285,33 @@ export const createRenderer = async (
     if (!visible) return;
     timer.update();
     const delta = Math.min(timer.getDelta(), 0.05);
+    const now = performance.now();
+    if (!root.classList.contains('is-introduced')) {
+      sampleStartedAt = now;
+      sampleAfter = now + 1000;
+      sampleTotal = 0;
+      sampleCount = 0;
+    } else if (now >= sampleAfter) {
+      sampleTotal += delta * 1000;
+      sampleCount += 1;
+      if (now - sampleAfter >= 2000) {
+        const average = sampleCount ? sampleTotal / sampleCount : 0;
+        const next =
+          quality.name === 'high' && average > 20
+            ? QUALITY_TIERS.medium
+            : quality.name === 'medium' && average > 28
+              ? QUALITY_TIERS.low
+              : null;
+        if (next) {
+          setQuality(next);
+          onQualityDowngrade?.(next);
+        }
+        sampleStartedAt = now;
+        sampleAfter = now;
+        sampleTotal = 0;
+        sampleCount = 0;
+      }
+    }
     ambient.sceneTime += delta * ambient.timeScale;
     const time = ambient.sceneTime;
     const pointerEase = 1 - Math.exp(-delta * 8.5);
@@ -276,38 +347,21 @@ export const createRenderer = async (
       interaction.targetParallaxY,
       pointerEase,
     );
-    root.style.setProperty(
-      '--parallax-far-x',
-      `${interaction.parallaxX * -5}px`,
-    );
-    root.style.setProperty(
-      '--parallax-far-y',
-      `${interaction.parallaxY * -4}px`,
-    );
-    root.style.setProperty(
-      '--parallax-mid-x',
-      `${interaction.parallaxX * -12}px`,
-    );
-    root.style.setProperty(
-      '--parallax-mid-y',
-      `${interaction.parallaxY * -9}px`,
-    );
-    root.style.setProperty(
-      '--parallax-near-x',
-      `${interaction.parallaxX * -24}px`,
-    );
-    root.style.setProperty(
-      '--parallax-near-y',
-      `${interaction.parallaxY * -17}px`,
-    );
+    setParallaxProperty('--parallax-far-x', interaction.parallaxX * -5);
+    setParallaxProperty('--parallax-far-y', interaction.parallaxY * -4);
+    setParallaxProperty('--parallax-mid-x', interaction.parallaxX * -12);
+    setParallaxProperty('--parallax-mid-y', interaction.parallaxY * -9);
+    setParallaxProperty('--parallax-near-x', interaction.parallaxX * -24);
+    setParallaxProperty('--parallax-near-y', interaction.parallaxY * -17);
     meshUniforms.uTime.value = time;
     meshUniforms.uMorph.value = state.morph;
     meshUniforms.uWarp.value = state.warp + cubeHeat * 0.48;
     meshUniforms.uChaos.value = state.chaos + cubeHeat * 1.15;
-    const finalGlitchBoost = finalEffects.update(delta * ambient.timeScale);
+    const finalGlitchBoost =
+      finalEffects?.update(delta * ambient.timeScale) ?? 0;
     if (
       !reducedMotion &&
-      finalEffects.canShowcase() &&
+      (finalEffects?.canShowcase() ?? false) &&
       showcaseStartedAt < 0 &&
       time >= nextShowcaseAt
     ) {
@@ -316,7 +370,7 @@ export const createRenderer = async (
       showcaseAxis = Math.random() < 0.5 ? 'x' : 'y';
     }
     if (showcaseStartedAt >= 0) {
-      if (!finalEffects.canShowcase() || reducedMotion) {
+      if (!(finalEffects?.canShowcase() ?? false) || reducedMotion) {
         showcaseStartedAt = -1;
         contentPivot.quaternion.identity();
         nextShowcaseAt = time + 4 + Math.random() * 4;
@@ -359,7 +413,8 @@ export const createRenderer = async (
         !(baseRotation instanceof THREE.Euler)
       )
         return;
-      const motion = finalEffects.isActive() && !reducedMotion ? 1 : 0;
+      const motion =
+        (finalEffects?.isActive() ?? false) && !reducedMotion ? 1 : 0;
       const phase = index * 1.73;
       variant.position.set(
         basePosition.x + Math.sin(time * 0.53 + phase) * 0.035 * motion,
@@ -412,11 +467,14 @@ export const createRenderer = async (
     headUniforms.uGlitch.value = glitchIntensity;
     headUniforms.uGlitchSeed.value = glitchSeed;
     headUniforms.uOpacity.value = state.headOpacity;
-    const finalMorph = finalEffects.getMorphState();
+    const finalMorph = finalEffects?.getMorphState() ?? emptyMorph;
     headUniforms.uFinalMorph.value = finalMorph.intensity;
     headUniforms.uTear.value = finalMorph.tear;
     cubeMesh.visible = state.cubeOpacity > 0.004;
-    if (!finalEffects.isActive() && !finalEffects.isFragmented()) {
+    if (
+      !(finalEffects?.isActive() ?? false) &&
+      !(finalEffects?.isFragmented() ?? false)
+    ) {
       headVariants.forEach((variant, index) => {
         variant.visible = index === 0 && state.headOpacity > 0.004;
       });
@@ -518,17 +576,30 @@ export const createRenderer = async (
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(
-      Math.min(window.devicePixelRatio || 1, width < 720 ? 1.5 : 2),
+      Math.min(
+        window.devicePixelRatio || 1,
+        reducedMotion ? 1 : quality.pixelRatioCap,
+      ),
     );
     renderer.setSize(width, height, false);
     viewportScale = width < 720 ? 0.82 : 1;
-    finalEffects.resize();
+    finalEffects?.resize();
     cubeFire.resize();
+    sampleStartedAt = performance.now();
+    sampleAfter = sampleStartedAt + 1000;
+    sampleTotal = 0;
+    sampleCount = 0;
   };
   resize();
   const onVisibilityChange = () => {
     visible = !document.hidden;
     if (visible) timer.reset();
+    if (visible) {
+      sampleStartedAt = performance.now();
+      sampleAfter = sampleStartedAt + 1000;
+      sampleTotal = 0;
+      sampleCount = 0;
+    }
   };
   document.addEventListener('visibilitychange', onVisibilityChange);
   const setPointer = (
@@ -558,12 +629,13 @@ export const createRenderer = async (
     interaction.targetParallaxY = 0;
   };
   const burnRaycaster = new THREE.Raycaster();
+  const burnPointer = new THREE.Vector2();
   const setBurnPoint = (clientX: number, clientY: number) => {
-    const pointer = new THREE.Vector2(
+    burnPointer.set(
       (clientX / window.innerWidth) * 2 - 1,
       -(clientY / window.innerHeight) * 2 + 1,
     );
-    burnRaycaster.setFromCamera(pointer, camera);
+    burnRaycaster.setFromCamera(burnPointer, camera);
     cubeHeatTarget = burnRaycaster.intersectObject(cubeMesh, false).length
       ? 1
       : 0;
@@ -604,7 +676,8 @@ export const createRenderer = async (
     cubeFire.setBurning(active, pressure);
   };
   const setChapter = (index: number) => {
-    finalEffects.setActive(index === 3);
+    finaleActive = index === 3;
+    finalEffects?.setActive(finaleActive);
     showcaseStartedAt = -1;
     contentPivot.quaternion.identity();
     nextShowcaseAt = ambient.sceneTime + 4 + Math.random() * 4;
@@ -615,15 +688,25 @@ export const createRenderer = async (
       showcaseStartedAt = -1;
       contentPivot.quaternion.identity();
     }
-    finalEffects.setReducedMotion(active);
+    finalEffects?.setReducedMotion(active);
     cubeFire.setReducedMotion(active);
+    resize();
+  };
+  const setQuality = (next: QualityTier) => {
+    quality = next;
+    root.dataset.quality = next.name;
+    cubeFire.setQuality(next);
+    depthField.setQuality(next);
+    finalEffects?.setQuality(next);
+    resize();
   };
   const destroy = () => {
+    destroyed = true;
     document.removeEventListener('visibilitychange', onVisibilityChange);
     gsap.killTweensOf(interaction);
     gsap.killTweensOf(ambient);
     renderer.setAnimationLoop(null);
-    finalEffects.dispose();
+    finalEffects?.dispose();
     cubeFire.dispose();
     cubeMesh.geometry.dispose();
     meshMaterial.dispose();
@@ -655,6 +738,8 @@ export const createRenderer = async (
     setBurnPoint,
     setChapter,
     setReducedMotion,
+    setQuality,
+    preloadFinale,
     headAvailable: isHeadSourceAvailable(),
   };
 };

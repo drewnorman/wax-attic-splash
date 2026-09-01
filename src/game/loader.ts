@@ -1,11 +1,4 @@
-const TASKS = [
-  'webgl',
-  'head',
-  'texture',
-  'signals',
-  'typeface',
-  'video',
-] as const;
+const TASKS = ['webgl', 'head', 'texture', 'signals'] as const;
 type Task = (typeof TASKS)[number];
 type TaskState = 'waiting' | 'ready' | 'fallback';
 const MINIMUM_VISIBLE_MS = 900;
@@ -36,7 +29,7 @@ const withTimeout = <Value>(
     );
   });
 
-const loadImage = (source: string) =>
+export const loadImage = (source: string) =>
   new Promise<void>((resolve, reject) => {
     const image = new Image();
     image.addEventListener('load', () => resolve(), { once: true });
@@ -50,35 +43,7 @@ const loadImage = (source: string) =>
     image.src = source;
   });
 
-const waitForVideo = (video: HTMLVideoElement) =>
-  new Promise<void>((resolve, reject) => {
-    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-      resolve();
-      return;
-    }
-    const cleanup = () => {
-      window.clearTimeout(timer);
-      video.removeEventListener('loadeddata', onReady);
-      video.removeEventListener('error', onError);
-    };
-    const onReady = () => {
-      cleanup();
-      resolve();
-    };
-    const onError = () => {
-      cleanup();
-      reject(new Error('Ambient video unavailable.'));
-    };
-    video.addEventListener('loadeddata', onReady, { once: true });
-    video.addEventListener('error', onError, { once: true });
-    const timer = window.setTimeout(() => {
-      cleanup();
-      reject(new Error('Ambient video timed out.'));
-    }, LOAD_TIMEOUT_MS);
-    video.load();
-  });
-
-const createBootLoader = (root: HTMLElement) => {
+const createBootLoader = () => {
   const overlay = document.getElementById('loadingOverlay');
   const percent = document.getElementById('loadingPercent');
   const bar = document.getElementById('loadingBarFill');
@@ -125,28 +90,8 @@ const createBootLoader = (root: HTMLElement) => {
 
   const preload = () =>
     Promise.all([
-      watch('texture', loadImage('/images/wax-texture.png')),
-      watch(
-        'signals',
-        Promise.all(
-          [
-            '/images/grunge-pressing.webp',
-            '/images/grunge-lag.webp',
-            '/images/grunge-darkness.webp',
-            '/images/grunge-attic.webp',
-            '/images/statik.gif',
-          ].map(loadImage),
-        ),
-      ),
-      watch('typeface', document.fonts?.ready ?? Promise.resolve()),
-      watch(
-        'video',
-        Promise.all(
-          Array.from(
-            root.querySelectorAll<HTMLVideoElement>('.ambient-video'),
-          ).map(waitForVideo),
-        ),
-      ),
+      watch('texture', loadImage(waxTextureUrl)),
+      watch('signals', loadImage(pressingUrl)),
     ]);
 
   const finish = async () => {
@@ -172,3 +117,5 @@ const createBootLoader = (root: HTMLElement) => {
 };
 
 export default createBootLoader;
+import waxTextureUrl from '../assets/media/wax-texture.webp?url';
+import pressingUrl from '../assets/media/grunge-pressing.webp?url';

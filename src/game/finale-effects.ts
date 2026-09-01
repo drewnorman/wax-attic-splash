@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { skullVertexShader, skullFragmentShader } from './shaders';
+import type { QualityTier } from './quality';
+import { QUALITY_TIERS } from './quality';
 
 const createSkullMaterial = (shadow = 0) =>
   new THREE.ShaderMaterial({
@@ -300,6 +302,7 @@ export const createFinalSceneEffects = (
   let fragmentCount = maxFragments;
   let dropCount = maxDrops;
   let snowCount = maxSnow;
+  let quality = QUALITY_TIERS.high;
   let glitchBoost = 0;
   let rainAccumulator = 0;
   let snowAccumulator = 0;
@@ -479,15 +482,16 @@ export const createFinalSceneEffects = (
     reducedMotion = next;
     setActive(active);
   };
-  const resize = () => {
-    const mobile = window.innerWidth < 720;
-    fragmentCount = mobile ? 160 : maxFragments;
-    dropCount = mobile ? 44 : maxDrops;
-    snowCount = mobile ? 120 : maxSnow;
+  const setQuality = (next: QualityTier) => {
+    quality = next;
+    fragmentCount = quality.finaleFragments;
+    dropCount = quality.finaleDrops;
+    snowCount = quality.finaleSnow;
     fragments.count = fragmentCount;
     rain.count = dropCount;
     snow.count = snowCount;
   };
+  const resize = () => setQuality(quality);
   const update = (delta: number) => {
     if (!active || reducedMotion) return 0;
     const safeDelta = Math.min(delta, 0.25);
@@ -654,6 +658,7 @@ export const createFinalSceneEffects = (
   return {
     update,
     resize,
+    setQuality,
     setActive,
     setReducedMotion,
     setTexture: (texture: THREE.Texture) => {
