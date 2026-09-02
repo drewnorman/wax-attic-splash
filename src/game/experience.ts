@@ -166,7 +166,8 @@ const createExperience = async () => {
       progressNav.setAttribute('aria-hidden', 'false');
     }
     rendererController?.setChapter(nextIndex);
-    if (nextIndex >= 1) void rendererController?.preloadFinale();
+    if (nextIndex >= 2) void rendererController?.preloadFinale();
+    chapterAssets.setActiveChapter(nextIndex);
     void chapterAssets.preloadChapter(
       Math.min(chapters.length - 1, nextIndex + 1),
     );
@@ -605,6 +606,7 @@ const createExperience = async () => {
           timeline.play();
         });
     }
+    chapterAssets.syncVideoPlayback();
   };
   const shouldSuppressControlClick = (event: MouseEvent) => {
     if (!suppressControlClick) return false;
