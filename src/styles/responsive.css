@@ -1,4 +1,9 @@
 @media screen and (width <= 720px) {
+  #experience {
+    --mobile-content-inset: 1.35rem;
+    --mobile-edge-inset: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
   .bio-smear {
     width: 62vw;
     opacity: 0.36;
@@ -66,6 +71,7 @@
     align-content: end;
     grid-template-columns: minmax(0, 1fr) auto;
     place-items: end stretch;
+    padding-right: var(--mobile-content-inset);
     column-gap: clamp(0.8rem, 4vw, 1.5rem);
   }
 
@@ -80,7 +86,7 @@
     bottom: auto;
     place-self: end;
     margin-bottom: 0.05rem;
-    font-size: clamp(1.15rem, 5.8vw, 1.7rem);
+    font-size: clamp(1.65rem, 8vw, 2.35rem);
     white-space: nowrap;
   }
 
@@ -96,8 +102,8 @@
   }
 
   .stage-progress {
-    left: 1.35rem;
-    bottom: max(1.4rem, env(safe-area-inset-bottom));
+    left: var(--mobile-content-inset);
+    bottom: var(--mobile-edge-inset);
     width: min(12rem, calc(100vw - 5.6rem));
     height: 2.45rem;
   }
@@ -123,7 +129,23 @@
   .chapter[data-index='1'],
   .chapter[data-index='2'],
   .chapter[data-index='3'] {
-    padding-bottom: calc(max(1.4rem, env(safe-area-inset-bottom)) + 3.3rem);
+    padding-bottom: calc(var(--mobile-edge-inset) + 3rem);
+  }
+
+  .paint-atmosphere__layer {
+    inset: -12dvh -12vw;
+  }
+
+  #experience .paint-mask {
+    inset: 0;
+    width: auto;
+    height: auto;
+    aspect-ratio: auto;
+    mask-size: cover;
+  }
+
+  .paint-mask::after {
+    mask-size: cover;
   }
 
   .progress {
