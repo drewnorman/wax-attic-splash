@@ -151,7 +151,6 @@
 @media (prefers-reduced-motion: reduce) {
   .backdrop__sludge::before,
   .backdrop__sludge::after,
-  .scroll-cue__arrow,
   .bio-smear,
   .signal-tunnel,
   .signal-tear,

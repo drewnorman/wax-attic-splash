@@ -60,18 +60,39 @@
   animation-duration: 460ms;
 }
 
-.burn-reactive.is-burn-hit[data-burn-target='title'] {
+.burn-reactive.is-burn-hit[data-burn-target='title'],
+#experience .scroll-cue.is-burn-hit[data-burn-target='title'] {
   animation: burn-title-slice 155ms steps(2, end) infinite alternate;
   color: #fff5b1;
   filter: brightness(1.85) contrast(1.3) drop-shadow(0.16rem 0 #ff1f5b)
     drop-shadow(-0.14rem 0 #e7ff35);
 }
 
+#experience .scroll-cue.is-burn-hit[data-burn-target='title'] {
+  visibility: visible;
+  opacity: 1;
+  clip-path: none;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
 .burn-reactive.is-burn-hit[data-burn-target='sigils'] .is-stage-glyph,
 .stage-indicator.is-burn-hit span {
-  color: #fff7a3;
+  color: #fff5b1;
   animation: burn-sigil-scatter 260ms steps(4, end) infinite alternate;
-  filter: drop-shadow(0 0 0.55rem #ff3518);
+  filter: brightness(1.85) contrast(1.3) drop-shadow(0.16rem 0 #ff1f5b)
+    drop-shadow(-0.14rem 0 #e7ff35);
+}
+
+#experience[data-chapter]
+  .stage-indicator.is-burn-hit[data-burn-target='sigils']
+  span {
+  color: #fff5b1;
+  opacity: 1;
+  filter: brightness(1.85) contrast(1.3) drop-shadow(0.16rem 0 #ff1f5b)
+    drop-shadow(-0.14rem 0 #e7ff35);
+  animation: burn-sigil-scatter 260ms steps(4, end) infinite alternate;
 }
 
 .burn-reactive.is-burn-hit[data-burn-target='sigils']
@@ -85,6 +106,12 @@
   .is-stage-glyph:nth-child(3n + 3),
 .stage-indicator.is-burn-hit span:nth-child(3n + 3) {
   animation-delay: -180ms;
+}
+
+.stage-indicator.is-burn-hit {
+  --stage-glyph-color: #fff5b1;
+  --stage-glyph-filter: brightness(1.85) contrast(1.3)
+    drop-shadow(0.16rem 0 #ff1f5b) drop-shadow(-0.14rem 0 #e7ff35);
 }
 
 .edge-tape.is-burn-hit {
@@ -186,8 +213,7 @@
   .burn-reactive.is-burn-hit,
   .burn-reactive.is-burn-hit .is-stage-glyph,
   .stage-indicator.is-burn-hit span,
-  .progress.is-burn-hit::before,
-  .progress.is-burn-hit::after,
+  .stage-progress .stage-indicator.is-burn-hit,
   .is-head-switching #scene {
     animation: none;
     transform: none;

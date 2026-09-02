@@ -61,7 +61,7 @@
   border-color: #ff5d12;
   color: #ff9b31;
   filter: drop-shadow(0 0 0.5rem #ff3b09);
-  animation: cursor-burn 0.16s steps(2, end) infinite;
+  animation: cursor-burn 0.28s steps(2, end) infinite;
 }
 
 #experience.is-stuttering #scene,

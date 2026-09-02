@@ -650,7 +650,7 @@ export const createRenderer = async (
     );
     gsap.killTweensOf(ambient, 'timeScale');
     gsap.to(ambient, {
-      timeScale: active ? 0.15 : 1,
+      timeScale: active ? 0.32 : 1,
       duration: active ? 0.18 : 0.5,
       ease: active ? 'power2.out' : 'power2.inOut',
       overwrite: true,
