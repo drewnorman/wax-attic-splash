@@ -99,62 +99,6 @@
   animation-direction: reverse;
 }
 
-.progress.is-burn-hit {
-  filter: drop-shadow(0 0 0.7rem #ff2814);
-}
-
-.progress.is-burn-hit::before,
-.progress.is-burn-hit::after {
-  z-index: -3;
-  border: 0;
-  border-radius: 48% 52% 20% 80%;
-  background: linear-gradient(
-    to top,
-    #ff2712 0 35%,
-    #ff9b1b 36% 64%,
-    #fff36b 65% 82%,
-    transparent 83%
-  );
-  box-shadow: 0 0 0.9rem #ff3215;
-  clip-path: polygon(
-    0 100%,
-    7% 53%,
-    26% 72%,
-    42% 12%,
-    58% 67%,
-    78% 34%,
-    100% 100%
-  );
-  animation: progress-fire 180ms steps(3, end) infinite alternate;
-}
-
-.progress.is-burn-hit::before {
-  top: -0.7rem;
-  right: 0.1rem;
-  width: 2.45rem;
-  height: 3rem;
-}
-
-.progress.is-burn-hit::after {
-  right: 0.06rem;
-  bottom: -0.45rem;
-  width: 2.2rem;
-  height: 2.8rem;
-  animation-delay: -90ms;
-}
-
-.progress.is-burn-hit .progress__reservoir {
-  border-color: #ff3520;
-  box-shadow:
-    inset 0 0 0.55rem #ff1911,
-    0 0 0.65rem #ff5b18;
-  animation: progress-border-flash 240ms steps(2, end) infinite alternate;
-}
-
-.progress.is-burn-hit .progress__fill {
-  filter: hue-rotate(285deg) brightness(1.8) saturate(2);
-}
-
 .shop-link.is-burn-hit {
   color: #fff39c;
   filter: drop-shadow(0 0 0.38rem #ff3a15) drop-shadow(0 0 1rem #ff174f);
@@ -219,22 +163,6 @@
 @keyframes burn-ticker-wobble-mobile {
   to {
     transform: translateY(0.16rem) skewX(3deg);
-  }
-}
-
-@keyframes progress-fire {
-  to {
-    transform: translateY(-0.35rem) scaleX(0.84) rotate(4deg);
-    filter: brightness(1.45);
-  }
-}
-
-@keyframes progress-border-flash {
-  to {
-    border-color: #fff38a;
-    box-shadow:
-      inset 0 0 0.8rem #ff1a0d,
-      0 0 1.2rem #ffb21f;
   }
 }
 

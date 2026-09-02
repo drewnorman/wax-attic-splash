@@ -336,18 +336,6 @@ const createExperience = async () => {
       },
       0,
     );
-    const progress = nextIndex === 0 ? 0 : nextIndex / (chapters.length - 1);
-    timeline.to(
-      root,
-      {
-        '--story-progress': progress,
-        '--story-clip': `${progress * 100}%`,
-        '--story-meniscus': `${progress * 100}%`,
-        duration: reducedMotion ? 0.12 : 0.72,
-        ease: 'power2.inOut',
-      },
-      nextIndex > 0 && activeIndex === 0 ? 0.28 : 0,
-    );
   };
 
   const observerOptions = {

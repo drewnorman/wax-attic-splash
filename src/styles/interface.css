@@ -101,10 +101,6 @@
   animation-duration: 0.18s;
 }
 
-#experience[data-chapter='2'] .progress__reservoir {
-  border-color: rgb(190 255 194 / 42%);
-}
-
 .scroll-cue:focus-visible,
 .shop-link:focus-visible,
 .progress__mark:focus-visible {

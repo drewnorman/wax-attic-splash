@@ -103,19 +103,11 @@ const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '�
           {stageGlyphs.map((glyph) => <span>{glyph}</span>)}
         </p>
         <nav
-          class="progress observer-ignore burn-reactive"
-          data-burn-target="progress"
+          class="progress observer-ignore"
           aria-label="Story chapters"
           aria-hidden="true"
           inert
         >
-          <span class="progress__reservoir" aria-hidden="true">
-            <span class="progress__fill"
-              ><i class="progress__bubble progress__bubble--a"></i><i
-                class="progress__bubble progress__bubble--b"></i></span
-            >
-            <span class="progress__meniscus"></span>
-          </span>
           <button
             class="progress__mark is-active"
             type="button"
