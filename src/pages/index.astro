@@ -86,9 +86,11 @@ const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '�
         data-burn-target="ticker"
       >
         <div class="edge-tape__track">
-          <span>WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span><span
-            >WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span
-          >
+          {
+            Array.from({ length: 3 }, () => (
+              <span>WAX ATTIC · WAX ATTIC · WAX ATTIC ·</span>
+            ))
+          }
         </div>
       </div>
     </div>

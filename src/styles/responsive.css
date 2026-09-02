@@ -20,6 +20,26 @@
     opacity: 0.42;
   }
 
+  .motif-scene--darkness {
+    background: #fff;
+  }
+
+  .motif-scene--darkness .skull-strip {
+    opacity: 0.72;
+    filter: grayscale(1) contrast(1.28) brightness(1.08);
+    mix-blend-mode: normal;
+  }
+
+  .paint-mask--burst,
+  .paint-mask::after {
+    display: none;
+  }
+
+  .paint-atmosphere__layer,
+  .paint-mask {
+    animation: none;
+  }
+
   .attic-portal {
     width: 104vw;
     opacity: 0.72;
