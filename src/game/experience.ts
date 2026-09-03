@@ -20,6 +20,8 @@ const TRANSITION_DURATION = 1.3;
 
 const MOMENTUM_COOLDOWN = 180;
 const TOUCH_DIRECTION_THRESHOLD = 12;
+const TOUCH_HOLD_DURATION = 440;
+const CONTROL_DRAG_THRESHOLD = 4;
 
 const createExperience = async () => {
   const root = document.getElementById('experience');
@@ -64,8 +66,13 @@ const createExperience = async () => {
   let activeIndex = 0;
   let transitioning = false;
   let inspectingPointerId: number | null = null;
+  let touchHoldTimer: number | undefined;
   let touchOrigin: TouchOrigin | null = null;
   let touchIntent: 'pending' | 'navigation' | 'burning' | null = null;
+  let controlDragOrigin: TouchOrigin | null = null;
+  let burnStartedOnControl = false;
+  let suppressControlClick = false;
+  let lastTouchStartedAt = 0;
   let lastBurnPoint: Point | null = null;
   let cooldownTimer: number | undefined;
   let pointerFrame = 0;
@@ -159,7 +166,8 @@ const createExperience = async () => {
       progressNav.setAttribute('aria-hidden', 'false');
     }
     rendererController?.setChapter(nextIndex);
-    if (nextIndex >= 1) void rendererController?.preloadFinale();
+    if (nextIndex >= 2) void rendererController?.preloadFinale();
+    chapterAssets.setActiveChapter(nextIndex);
     void chapterAssets.preloadChapter(
       Math.min(chapters.length - 1, nextIndex + 1),
     );
@@ -336,18 +344,6 @@ const createExperience = async () => {
       },
       0,
     );
-    const progress = nextIndex === 0 ? 0 : nextIndex / (chapters.length - 1);
-    timeline.to(
-      root,
-      {
-        '--story-progress': progress,
-        '--story-clip': `${progress * 100}%`,
-        '--story-meniscus': `${progress * 100}%`,
-        duration: reducedMotion ? 0.12 : 0.72,
-        ease: 'power2.inOut',
-      },
-      nextIndex > 0 && activeIndex === 0 ? 0.28 : 0,
-    );
   };
 
   const observerOptions = {
@@ -376,6 +372,9 @@ const createExperience = async () => {
   const isInteractiveTarget = (target: EventTarget | null) =>
     target instanceof HTMLElement &&
     Boolean(target.closest('a, button, input, select, textarea'));
+  const isBurnableControlTarget = (target: EventTarget | null) =>
+    target instanceof HTMLElement &&
+    Boolean(target.closest('.stage-progress, .scroll-cue'));
   const burnAt = (clientX: number, clientY: number, pressure = 0.7) => {
     if (
       lastBurnPoint &&
@@ -386,7 +385,12 @@ const createExperience = async () => {
     burnController.add(clientX, clientY, pressure || 0.7);
     rendererController?.setBurnPoint(clientX, clientY);
     burnReactive.forEach((element) => {
-      if (!element.closest('.is-active, .foreground-motifs, .progress')) return;
+      if (
+        !element.closest(
+          '.is-active, .foreground-motifs, .progress, .stage-progress',
+        )
+      )
+        return;
       const rect = element.getBoundingClientRect();
       if (
         clientX < rect.left ||
@@ -398,13 +402,12 @@ const createExperience = async () => {
       element.classList.add('is-burn-hit');
       const existing = burnReleaseTimers.get(element);
       if (existing) window.clearTimeout(existing);
-      const duration = element.dataset.burnTarget === 'progress' ? 3200 : 620;
       burnReleaseTimers.set(
         element,
         window.setTimeout(() => {
           element.classList.remove('is-burn-hit');
           burnReleaseTimers.delete(element);
-        }, duration),
+        }, 620),
       );
     });
   };
@@ -419,6 +422,16 @@ const createExperience = async () => {
     rendererController?.setBurning(true, event.pressure || 0.7);
     root.classList.add('is-inspecting', 'is-burning');
     burnAt(touchOrigin.x, touchOrigin.y, event.pressure);
+  };
+  const startMouseBurn = (event: PointerEvent, origin: TouchOrigin) => {
+    inspectingPointerId = event.pointerId;
+    root.setPointerCapture?.(event.pointerId);
+    rendererController?.setPointer(event.clientX, event.clientY, reducedMotion);
+    rendererController?.setSlowMotion(true);
+    rendererController?.setBurning(true, event.pressure || 0.7);
+    root.classList.add('is-inspecting', 'is-burning');
+    burnAt(origin.x, origin.y, event.pressure);
+    burnAt(event.clientX, event.clientY, event.pressure);
   };
   const applyPointerMove = () => {
     pointerFrame = 0;
@@ -436,11 +449,9 @@ const createExperience = async () => {
         const deltaX = event.clientX - touchOrigin.x;
         const deltaY = event.clientY - touchOrigin.y;
         if (Math.hypot(deltaX, deltaY) >= TOUCH_DIRECTION_THRESHOLD) {
-          if (Math.abs(deltaX) > Math.abs(deltaY)) startTouchBurn(event);
-          else {
-            touchIntent = 'navigation';
-            touchOrigin = null;
-          }
+          window.clearTimeout(touchHoldTimer);
+          touchIntent = 'navigation';
+          touchOrigin = null;
         }
       }
       if (inspectingPointerId === event.pointerId) {
@@ -453,6 +464,19 @@ const createExperience = async () => {
         burnAt(event.clientX, event.clientY, event.pressure);
       }
       return;
+    }
+    if (
+      controlDragOrigin &&
+      controlDragOrigin.pointerId === event.pointerId &&
+      Math.hypot(
+        event.clientX - controlDragOrigin.x,
+        event.clientY - controlDragOrigin.y,
+      ) >= CONTROL_DRAG_THRESHOLD
+    ) {
+      const origin = controlDragOrigin;
+      controlDragOrigin = null;
+      suppressControlClick = true;
+      startMouseBurn(event, origin);
     }
     rendererController?.setPointer(event.clientX, event.clientY, reducedMotion);
     if (inspectingPointerId === event.pointerId)
@@ -469,26 +493,47 @@ const createExperience = async () => {
       pointerFrame = window.requestAnimationFrame(applyPointerMove);
   };
   const onPointerDown = (event: PointerEvent) => {
-    if (isInteractiveTarget(event.target)) return;
+    const burnableControl = isBurnableControlTarget(event.target);
+    if (isInteractiveTarget(event.target) && !burnableControl) return;
     if (event.pointerType === 'touch') {
+      lastTouchStartedAt = performance.now();
+      burnStartedOnControl = burnableControl;
+      suppressControlClick = false;
       touchOrigin = {
         x: event.clientX,
         y: event.clientY,
         pointerId: event.pointerId,
       };
       touchIntent = 'pending';
+      window.clearTimeout(touchHoldTimer);
+      touchHoldTimer = window.setTimeout(
+        () => startTouchBurn(event),
+        TOUCH_HOLD_DURATION,
+      );
       return;
     }
     if (event.button !== 0) return;
-    inspectingPointerId = event.pointerId;
-    root.setPointerCapture?.(event.pointerId);
-    rendererController?.setPointer(event.clientX, event.clientY, reducedMotion);
-    rendererController?.setSlowMotion(true);
-    rendererController?.setBurning(true, event.pressure || 0.7);
-    root.classList.add('is-inspecting', 'is-burning');
-    burnAt(event.clientX, event.clientY, event.pressure);
+    if (burnableControl) {
+      burnStartedOnControl = true;
+      controlDragOrigin = {
+        x: event.clientX,
+        y: event.clientY,
+        pointerId: event.pointerId,
+      };
+      suppressControlClick = false;
+      return;
+    }
+    burnStartedOnControl = false;
+    startMouseBurn(event, {
+      x: event.clientX,
+      y: event.clientY,
+      pointerId: event.pointerId,
+    });
   };
   const releaseInspection = (event: PointerEvent) => {
+    window.clearTimeout(touchHoldTimer);
+    controlDragOrigin = null;
+    const completedBurn = touchIntent === 'burning';
     touchOrigin = null;
     touchIntent = null;
     if (inspectingPointerId === null || event.pointerId !== inspectingPointerId)
@@ -500,6 +545,8 @@ const createExperience = async () => {
     rendererController?.setSlowMotion(false);
     rendererController?.setBurning(false);
     root.classList.remove('is-inspecting', 'is-burning');
+    if (completedBurn && burnStartedOnControl) suppressControlClick = true;
+    burnStartedOnControl = false;
     if (!transitioning)
       cooldownTimer = window.setTimeout(enableObservers, MOMENTUM_COOLDOWN);
   };
@@ -531,6 +578,14 @@ const createExperience = async () => {
     }
   };
   const preventNativeDrag = (event: Event) => event.preventDefault();
+  const preventTouchCallout = (event: Event) => {
+    if (
+      touchIntent === 'pending' ||
+      touchIntent === 'burning' ||
+      performance.now() - lastTouchStartedAt < 1000
+    )
+      event.preventDefault();
+  };
   const onResize = () => {
     rendererController?.resize();
     overlayController.resize();
@@ -551,9 +606,19 @@ const createExperience = async () => {
           timeline.play();
         });
     }
+    chapterAssets.syncVideoPlayback();
   };
-  const onScrollCueClick = () => goTo(1);
+  const shouldSuppressControlClick = (event: MouseEvent) => {
+    if (!suppressControlClick) return false;
+    event.preventDefault();
+    suppressControlClick = false;
+    return true;
+  };
+  const onScrollCueClick = (event: MouseEvent) => {
+    if (!shouldSuppressControlClick(event)) goTo(1);
+  };
   const onProgressClick = (event: MouseEvent) => {
+    if (shouldSuppressControlClick(event)) return;
     if (event.currentTarget instanceof HTMLElement)
       goTo(Number(event.currentTarget.dataset.target));
   };
@@ -568,6 +633,7 @@ const createExperience = async () => {
   root.addEventListener('pointerenter', onPointerEnter);
   root.addEventListener('selectstart', preventNativeDrag);
   root.addEventListener('dragstart', preventNativeDrag);
+  root.addEventListener('contextmenu', preventTouchCallout);
   scrollCue?.addEventListener('click', onScrollCueClick);
   progressMarks.forEach((mark) =>
     mark.addEventListener('click', onProgressClick),
@@ -633,6 +699,7 @@ const createExperience = async () => {
   void chapterAssets.preloadChapter(1);
   const destroy = () => {
     window.clearTimeout(cooldownTimer);
+    window.clearTimeout(touchHoldTimer);
     window.cancelAnimationFrame(pointerFrame);
     observers.forEach((observer) => observer.kill());
     media.revert();
@@ -647,6 +714,7 @@ const createExperience = async () => {
     root.removeEventListener('pointerenter', onPointerEnter);
     root.removeEventListener('selectstart', preventNativeDrag);
     root.removeEventListener('dragstart', preventNativeDrag);
+    root.removeEventListener('contextmenu', preventTouchCallout);
     scrollCue?.removeEventListener('click', onScrollCueClick);
     progressMarks.forEach((mark) =>
       mark.removeEventListener('click', onProgressClick),

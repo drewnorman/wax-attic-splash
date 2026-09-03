@@ -162,6 +162,9 @@ export const createRenderer = async (
       .then(({ createProceduralSkull, createFinalSceneEffects }) => {
         if (destroyed) return;
         const skull = createProceduralSkull();
+        const skullBounds = new THREE.Box3().setFromObject(skull);
+        const skullSize = skullBounds.getSize(new THREE.Vector3());
+        skull.position.y += skullSize.y * 0.15;
         skull.userData.idleBasePosition = skull.position.clone();
         skull.userData.idleBaseRotation = skull.rotation.clone();
         getVariantMaterials(skull).forEach((material) => {
@@ -175,6 +178,7 @@ export const createRenderer = async (
           contentPivot,
           headVariants,
           root,
+          camera,
         );
         if (skullTexture) finalEffects.setTexture(skullTexture);
         finalEffects.setQuality(quality);
@@ -642,6 +646,7 @@ export const createRenderer = async (
     headHeatTarget = burnRaycaster.intersectObjects(headVariants, true).length
       ? 1
       : 0;
+    finalEffects?.setBurnPoint(burnRaycaster);
   };
   const setSlowMotion = (active: boolean) => {
     const cssAnimations = root.getAnimations({ subtree: true });
@@ -650,7 +655,7 @@ export const createRenderer = async (
     );
     gsap.killTweensOf(ambient, 'timeScale');
     gsap.to(ambient, {
-      timeScale: active ? 0.15 : 1,
+      timeScale: active ? 0.32 : 1,
       duration: active ? 0.18 : 0.5,
       ease: active ? 'power2.out' : 'power2.inOut',
       overwrite: true,
@@ -672,6 +677,7 @@ export const createRenderer = async (
     if (!active) {
       cubeHeatTarget = 0;
       headHeatTarget = 0;
+      finalEffects?.setBurning(false);
     }
     cubeFire.setBurning(active, pressure);
   };

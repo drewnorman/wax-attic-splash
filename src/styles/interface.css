@@ -61,7 +61,7 @@
   border-color: #ff5d12;
   color: #ff9b31;
   filter: drop-shadow(0 0 0.5rem #ff3b09);
-  animation: cursor-burn 0.16s steps(2, end) infinite;
+  animation: cursor-burn 0.28s steps(2, end) infinite;
 }
 
 #experience.is-stuttering #scene,
@@ -99,10 +99,6 @@
 #experience.is-final-reassembling .analog-overlay__noise {
   opacity: 0.46;
   animation-duration: 0.18s;
-}
-
-#experience[data-chapter='2'] .progress__reservoir {
-  border-color: rgb(190 255 194 / 42%);
 }
 
 .scroll-cue:focus-visible,

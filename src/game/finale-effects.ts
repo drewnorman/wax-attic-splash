@@ -146,13 +146,19 @@ export const createFinalSceneEffects = (
   contentPivot: THREE.Group,
   headVariants: THREE.Object3D[],
   root: HTMLElement,
+  camera: THREE.PerspectiveCamera,
 ) => {
-  const maxFragments = 300;
+  const maxFragments = 360;
   const maxDrops = 80;
   const maxSnow = 220;
   const dummy = new THREE.Object3D();
   const fragmentGeometry = new THREE.BoxGeometry(0.075, 0.075, 0.075);
-  const fragmentMaterial = new THREE.MeshBasicMaterial({ color: 0x8446a8 });
+  const fragmentBaseColor = new THREE.Color(0x8446a8);
+  const fragmentBurnColor = new THREE.Color(0xffb52e);
+  const fragmentMaterial = new THREE.MeshBasicMaterial({
+    color: fragmentBaseColor,
+    transparent: true,
+  });
   const fragments = new THREE.InstancedMesh(
     fragmentGeometry,
     fragmentMaterial,
@@ -307,10 +313,13 @@ export const createFinalSceneEffects = (
   let rainAccumulator = 0;
   let snowAccumulator = 0;
   let fragmentAccumulator = 0;
+  let fragmentBurnTarget = 0;
+  let fragmentBurnIntensity = 0;
   const RAIN_STEP = 0.1;
   const FRAGMENT_STEP = 1 / 12;
 
   const showActiveHead = () => {
+    fragments.position.x = 0;
     headVariants.forEach((variant, index) => {
       variant.visible = index === activeVariantIndex;
     });
@@ -367,7 +376,7 @@ export const createFinalSceneEffects = (
   const resetState = () => {
     sceneTime = 0;
     rainEndsAt = Infinity;
-    explosionAt = 5 + Math.random() * 4;
+    explosionAt = 4.5 + Math.random() * 3;
     ambientAt = 1 + Math.random() * 1.5;
     ambientEndsAt = Infinity;
     ambientType = 'none';
@@ -381,6 +390,10 @@ export const createFinalSceneEffects = (
     rainAccumulator = 0;
     snowAccumulator = 0;
     fragmentAccumulator = 0;
+    fragmentBurnTarget = 0;
+    fragmentBurnIntensity = 0;
+    fragmentMaterial.color.copy(fragmentBaseColor);
+    fragmentMaterial.opacity = 1;
     rain.visible = false;
     snow.visible = false;
     fragments.visible = false;
@@ -428,9 +441,37 @@ export const createFinalSceneEffects = (
     stopAmbient();
     phase = 'burst';
     phaseStartedAt = sceneTime;
-    phaseEndsAt = sceneTime + 0.28 + Math.random() * 0.75;
+    phaseEndsAt = sceneTime + 0.68 + Math.random() * 0.58;
     fragments.visible = true;
     origins = collectOrigins(headVariants[activeVariantIndex]);
+    fragments.position.x = 0;
+    if (activeVariantIndex === 0 && window.innerWidth <= 720) {
+      contentPivot.updateMatrixWorld(true);
+      camera.updateMatrixWorld(true);
+      let minX = Infinity;
+      let maxX = -Infinity;
+      origins.forEach((origin) => {
+        const projectedX = origin
+          .clone()
+          .applyMatrix4(contentPivot.matrixWorld)
+          .project(camera).x;
+        minX = Math.min(minX, projectedX);
+        maxX = Math.max(maxX, projectedX);
+      });
+      const projectedOrigin = new THREE.Vector3()
+        .applyMatrix4(contentPivot.matrixWorld)
+        .project(camera).x;
+      const projectedUnitX = new THREE.Vector3(1, 0, 0)
+        .applyMatrix4(contentPivot.matrixWorld)
+        .project(camera).x;
+      const unitsToNdc = projectedUnitX - projectedOrigin;
+      if (
+        Number.isFinite(minX) &&
+        Number.isFinite(maxX) &&
+        Math.abs(unitsToNdc) > 0.0001
+      )
+        fragments.position.x = -((minX + maxX) * 0.5) / unitsToNdc;
+    }
     fragmentState.forEach((piece, index) =>
       piece.position.copy(origins[index]),
     );
@@ -443,9 +484,10 @@ export const createFinalSceneEffects = (
       piece.velocity
         .copy(origins[index])
         .normalize()
-        .multiplyScalar(2.3 + Math.random() * 3.2);
+        .multiplyScalar(2.45 + Math.random() * 3.35);
       piece.velocity.x += (Math.random() - 0.5) * 2;
       piece.velocity.y += 1.8 + Math.random() * 2.8;
+      if (index % 4 === 0) piece.velocity.z += 0.65 + Math.random() * 0.85;
       piece.rotation.set(
         Math.random() * 3,
         Math.random() * 3,
@@ -467,6 +509,9 @@ export const createFinalSceneEffects = (
       glitchBoost = 0;
       morphIntensity = 0;
       tearIntensity = 0;
+      fragmentBurnTarget = 0;
+      fragmentBurnIntensity = 0;
+      fragmentMaterial.color.copy(fragmentBaseColor);
       root.style.removeProperty('--final-chaos');
     }
     if (!active || reducedMotion)
@@ -496,6 +541,20 @@ export const createFinalSceneEffects = (
     if (!active || reducedMotion) return 0;
     const safeDelta = Math.min(delta, 0.25);
     sceneTime += safeDelta;
+    fragmentBurnIntensity = THREE.MathUtils.lerp(
+      fragmentBurnIntensity,
+      fragmentBurnTarget,
+      1 -
+        Math.exp(
+          -safeDelta * (fragmentBurnTarget > fragmentBurnIntensity ? 14 : 3.5),
+        ),
+    );
+    fragmentMaterial.color.lerpColors(
+      fragmentBaseColor,
+      fragmentBurnColor,
+      fragmentBurnIntensity,
+    );
+    fragmentMaterial.opacity = 0.86 + fragmentBurnIntensity * 0.14;
     morphIntensity =
       0.62 +
       Math.sin(sceneTime * 1.45) * 0.16 +
@@ -620,7 +679,10 @@ export const createFinalSceneEffects = (
         }
         dummy.position.copy(piece.position);
         dummy.rotation.copy(piece.rotation);
-        dummy.scale.setScalar(0.75 + (index % 6) * 0.08);
+        dummy.scale.setScalar(
+          (0.75 + (index % 6) * 0.08) *
+            (1 + fragmentBurnIntensity * (0.08 + (index % 3) * 0.035)),
+        );
         dummy.updateMatrix();
         fragments.setMatrixAt(index, dummy.matrix);
       }
@@ -631,7 +693,7 @@ export const createFinalSceneEffects = (
         phase = 'calm';
         scheduleHeadBurst(true);
         ambientAt = sceneTime + 0.6 + Math.random() * 1.2;
-        explosionAt = sceneTime + 6 + Math.random() * 5;
+        explosionAt = sceneTime + 5 + Math.random() * 3.5;
       }
     }
     glitchBoost =
@@ -661,9 +723,18 @@ export const createFinalSceneEffects = (
     setQuality,
     setActive,
     setReducedMotion,
+    setBurnPoint: (raycaster: THREE.Raycaster) => {
+      fragmentBurnTarget =
+        fragments.visible && raycaster.intersectObject(fragments, false).length
+          ? 1
+          : 0;
+    },
+    setBurning: (burning: boolean) => {
+      if (!burning) fragmentBurnTarget = 0;
+    },
     setTexture: (texture: THREE.Texture) => {
       fragmentMaterial.map = texture;
-      fragmentMaterial.color.setHex(0x8446a8);
+      fragmentMaterial.color.copy(fragmentBaseColor);
       fragmentMaterial.needsUpdate = true;
     },
     isFragmented: () => fragments.visible,

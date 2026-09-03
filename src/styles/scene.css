@@ -5,6 +5,7 @@
   overflow: hidden;
   background: #030504;
   touch-action: none;
+  -webkit-touch-callout: none;
   user-select: none;
 }
 
@@ -202,7 +203,7 @@
   font-weight: 900;
   letter-spacing: 0.14em;
   white-space: nowrap;
-  opacity: 0.22;
+  opacity: 0.52;
   transition:
     opacity 700ms ease,
     background-color 700ms ease,
@@ -212,11 +213,15 @@
 .edge-tape__track {
   display: flex;
   width: max-content;
+  will-change: transform;
   animation: tape-ticker 9s linear infinite;
 }
 
 .edge-tape__track span {
   display: block;
+  flex: none;
+  box-sizing: border-box;
+  padding-right: 0.8em;
 }
 
 .edge-tape--left {
@@ -226,19 +231,16 @@
 }
 
 #experience[data-chapter='1'] .edge-tape {
-  color: #100807;
-  background: #ff6d1c;
-  opacity: 0.52;
+  color: #101500;
+  background: #cfff2f;
 }
 
 #experience[data-chapter='2'] .edge-tape {
   color: #120418;
   background: #ff43a8;
-  opacity: 0.68;
 }
 
 #experience[data-chapter='3'] .edge-tape {
   color: #0c0312;
   background: #c879ff;
-  opacity: 0.34;
 }

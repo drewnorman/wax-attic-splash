@@ -25,7 +25,18 @@ export const createChapterAssetLoader = (root: HTMLElement) => {
   const states: ChapterAssetState[] = ['idle', 'idle', 'idle', 'idle'];
   const pending = new Map<number, Promise<void>>();
   let destroyed = false;
+  let activeChapter = 0;
   const warned = new Set<string>();
+
+  const syncVideoPlayback = () => {
+    root
+      .querySelectorAll<HTMLVideoElement>('.ambient-video')
+      .forEach((video) => {
+        if (activeChapter === 2 && !document.hidden && video.readyState >= 2)
+          void video.play().catch(() => {});
+        else video.pause();
+      });
+  };
 
   const loadVideo = async (source: string) => {
     const videos = Array.from(
@@ -39,7 +50,7 @@ export const createChapterAssetLoader = (root: HTMLElement) => {
           new Promise<void>((resolve, reject) => {
             const ready = () => {
               cleanup();
-              void video.play().catch(() => {});
+              syncVideoPlayback();
               resolve();
             };
             const failed = () => {
@@ -89,9 +100,17 @@ export const createChapterAssetLoader = (root: HTMLElement) => {
   return {
     preloadCritical: () => preloadChapter(0),
     preloadChapter,
+    setActiveChapter: (index: number) => {
+      activeChapter = index;
+      syncVideoPlayback();
+    },
+    syncVideoPlayback,
     getState: (index: number) => states[index] ?? 'fallback',
     destroy: () => {
       destroyed = true;
+      root
+        .querySelectorAll<HTMLVideoElement>('.ambient-video')
+        .forEach((video) => video.pause());
     },
   };
 };

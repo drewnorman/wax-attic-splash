@@ -86,9 +86,11 @@ const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '�
         data-burn-target="ticker"
       >
         <div class="edge-tape__track">
-          <span>WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span><span
-            >WAX ATTIC · WAX ATTIC · WAX ATTIC ·&nbsp;</span
-          >
+          {
+            Array.from({ length: 3 }, () => (
+              <span>WAX ATTIC · WAX ATTIC · WAX ATTIC ·</span>
+            ))
+          }
         </div>
       </div>
     </div>
@@ -103,19 +105,11 @@ const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '�
           {stageGlyphs.map((glyph) => <span>{glyph}</span>)}
         </p>
         <nav
-          class="progress observer-ignore burn-reactive"
-          data-burn-target="progress"
+          class="progress observer-ignore"
           aria-label="Story chapters"
           aria-hidden="true"
           inert
         >
-          <span class="progress__reservoir" aria-hidden="true">
-            <span class="progress__fill"
-              ><i class="progress__bubble progress__bubble--a"></i><i
-                class="progress__bubble progress__bubble--b"></i></span
-            >
-            <span class="progress__meniscus"></span>
-          </span>
           <button
             class="progress__mark is-active"
             type="button"
@@ -146,14 +140,18 @@ const stageGlyphs = ['⟁', '◉', '⸸', '⌁', '⊗', '⧖', '☷', '⟡', '�
         aria-labelledby="chapter-0-title"
       >
         <h1 id="chapter-0-title" class="visually-hidden">Wax Attic</h1>
-        <button class="scroll-cue observer-ignore" id="scrollCue" type="button">
+        <button
+          class="scroll-cue observer-ignore burn-reactive"
+          id="scrollCue"
+          type="button"
+          data-burn-target="title"
+        >
           <span class="scroll-cue__copy scroll-cue__copy--non-touch"
-            >scroll to mutate</span
+            >scroll to mutate · drag to burn</span
           >
           <span class="scroll-cue__copy scroll-cue__copy--touch"
-            >swipe to mutate</span
+            >swipe up/down to mutate<br />hold + drag to burn</span
           >
-          <span class="scroll-cue__arrow" aria-hidden="true">↓</span>
         </button>
       </section>
 

@@ -16,9 +16,6 @@
   --parallax-near-y: 0px;
   --analog-opacity: 0.24;
   --analog-damage: 0.2;
-  --story-progress: 0;
-  --story-clip: 0%;
-  --story-meniscus: 0%;
   --cursor-x: -100px;
   --cursor-y: -100px;
 }

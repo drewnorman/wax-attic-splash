@@ -100,9 +100,12 @@
 #experience[data-chapter='1'] .stage-indicator span:nth-child(-n + 3),
 #experience[data-chapter='2'] .stage-indicator span:nth-child(-n + 6),
 #experience[data-chapter='3'] .stage-indicator span:nth-child(-n + 9) {
-  color: var(--color-primary);
+  color: var(--stage-glyph-color, var(--color-primary));
   opacity: 0.96;
-  filter: drop-shadow(0 0 0.42rem rgb(15 237 25 / 58%));
+  filter: var(
+    --stage-glyph-filter,
+    drop-shadow(0 0 0.42rem rgb(15 237 25 / 58%))
+  );
   animation: stage-glyph-shimmer 2.8s ease-in-out infinite alternate;
 }
 
@@ -311,14 +314,6 @@
 
 .scroll-cue__copy--touch {
   display: none;
-}
-
-.scroll-cue__arrow {
-  display: inline-block;
-  margin-left: 0.24rem;
-  font-size: 1.3em;
-  filter: drop-shadow(0 0 0.35rem #51ff68);
-  animation: cue 1.4s ease-in-out infinite;
 }
 
 .chapter--final {
