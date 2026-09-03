@@ -496,6 +496,7 @@ const createExperience = async () => {
     const burnableControl = isBurnableControlTarget(event.target);
     if (isInteractiveTarget(event.target) && !burnableControl) return;
     if (event.pointerType === 'touch') {
+      event.preventDefault();
       lastTouchStartedAt = performance.now();
       burnStartedOnControl = burnableControl;
       suppressControlClick = false;

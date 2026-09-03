@@ -6,6 +6,12 @@
   background: #030504;
   touch-action: none;
   -webkit-touch-callout: none;
+}
+
+#experience,
+#experience * {
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-user-select: none;
   user-select: none;
 }
 
